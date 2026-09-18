@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MIRAI CITY | Population Growth</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="start-overlay" id="startOverlay">
+		<div class="start-card">
+			<p class="eyebrow">CITY COMMAND</p>
+			<h2>Welcome to MIRAI CITY</h2>
+			<p>Design a liveable district, balance services, and grow a resilient smart city.</p>
+			<div class="start-stats">
+				<span>Population target: 12k</span>
+				<span>Happiness goal: 85+</span>
+				<span>Safety threshold: 90%</span>
+			</div>
+			<button id="startGame" type="button">LAUNCH CITY</button>
+		</div>
+	</div>
+	<div class="app-shell">
+		<header class="topbar"><div class="brand-lockup"><span class="brand-mark">M</span><div><p class="eyebrow">SMART CITY SIMULATION</p><h1>MIRAI CITY</h1></div></div><div class="city-status"><span class="status-dot"></span><span id="cityStatus">CITY ONLINE</span></div></header>
+		<div class="game-header-rail">
+			<div class="mini-stat"><span>LEVEL</span><strong id="cityLevel">1</strong></div>
+			<div class="mini-stat"><span>SCORE</span><strong id="cityScore">0</strong></div>
+			<div class="mini-stat"><span>NEXT GOAL</span><strong id="nextGoal">1500</strong></div>
+			<div class="mini-stat advisor-stat"><span>AI ADVISOR</span><strong id="cityTip">Plan roads before housing.</strong></div>
+		</div>
+		<section class="stage-progress" aria-label="5 step city progression">
+			<div class="stage-step active" data-stage="1"><span>1</span><small>Foundation</small></div>
+			<div class="stage-step" data-stage="2"><span>2</span><small>Housing</small></div>
+			<div class="stage-step" data-stage="3"><span>3</span><small>Services</small></div>
+			<div class="stage-step" data-stage="4"><span>4</span><small>Eco City</small></div>
+			<div class="stage-step" data-stage="5"><span>5</span><small>Smart City</small></div>
+		</section>
+		<main class="game-layout">
+			<section class="city-view" aria-label="City planning view"><div class="view-header"><div><p class="eyebrow">DISTRICT 01 / ACTIVE PLAN</p><h2>Shape a city people want to call home.</h2></div><span class="time-chip" id="cycleLabel">CYCLE 01</span></div><div class="city-grid" id="cityGrid" aria-label="Buildable city grid"></div><div class="placement-hint" id="placementHint">Select a facility, then choose an open plot.</div></section>
+			<aside class="control-panel">
+				<section class="hud-section population-card"><div class="section-label"><span>LIVE METRIC</span><span class="metric-pulse"></span></div><div class="population-row"><span class="people-icon">◉</span><div><p class="metric-name">POPULATION</p><strong id="populationValue">5,000</strong></div></div><div class="population-progress"><span id="populationProgress"></span></div><p class="metric-note" id="populationTrend">Healthy city growth · next growth cycle in 8s</p></section>
+				<section class="stats-grid" aria-label="City statistics"><div class="stat"><span>HAPPINESS</span><strong id="happinessValue">72</strong><small>/ 100</small></div><div class="stat"><span>EDUCATION</span><strong id="educationValue">5,000</strong><small>capacity</small></div><div class="stat"><span>SCHOOLS</span><strong id="schoolsValue">0</strong><small id="schoolCapacityLabel">+0 capacity</small></div><div class="stat"><span>SATISFACTION</span><strong id="satisfactionValue">68</strong><small>/ 100</small></div><div class="stat traffic-stat"><span>TRAFFIC</span><strong id="trafficValue">70</strong><small>% congestion</small><div class="traffic-bar"><span id="trafficBar"></span></div></div></section>
+				<section class="build-section"><div class="section-heading"><span class="eyebrow">CITY DEVELOPMENT</span><span id="selectedBuilding">SELECT A FACILITY</span></div><div class="build-options" id="buildOptions"><button class="build-option" data-building="residential"><span class="option-icon">▦</span><span><b>Residence</b><small>+400 residents</small></span><em>¥120</em></button><button class="build-option" data-building="school"><span class="option-icon">⌂</span><span><b>School</b><small>+500 education</small></span><em>¥180</em></button><button class="build-option" data-building="park"><span class="option-icon">✦</span><span><b>Park</b><small>+10 happiness</small></span><em>¥80</em></button><button class="build-option" data-building="hospital"><span class="option-icon">+</span><span><b>Hospital</b><small>+120 residents</small></span><em>¥220</em></button><button class="build-option" data-building="station"><span class="option-icon">◇</span><span><b>Station</b><small>+180 residents</small></span><em>¥240</em></button><button class="build-option" data-building="road"><span class="option-icon">═</span><span><b>Road</b><small>-15% congestion</small></span><em>¥70</em></button></div></section>
+				<section class="economy-row"><span>DEVELOPMENT CREDITS</span><strong id="creditsValue">1,000</strong></section>
+				<div class="quick-actions">
+					<button type="button" id="boostGrowthButton">BOOST GROWTH</button>
+					<button type="button" id="advisorButton">AI ADVISOR</button>
+				</div>
+				<section class="battle-section" aria-label="City battle strategy">
+					<div class="section-heading"><span class="eyebrow">BATTLE STRATEGY</span><span id="threatLabel">THREAT 45%</span></div>
+					<div class="battle-grid">
+						<div class="battle-panel">
+							<div class="threat-bar"><span id="threatBar"></span></div>
+							<div class="battle-stats">
+								<div><span>DEFENSE</span><strong id="defenseValue">32</strong></div>
+								<div><span>MORALE</span><strong id="moraleValue">74</strong></div>
+								<div><span>RAIDS</span><strong id="raidValue">0</strong></div>
+							</div>
+						</div>
+						<div class="battle-actions">
+							<button type="button" id="deployDefense">DEPLOY DEFENSE</button>
+							<button type="button" id="callAid">CALL AID</button>
+						</div>
+					</div>
+				</section>
+				<section class="mission-section" aria-label="Battle missions">
+					<div class="section-heading"><span class="eyebrow">CITY MISSIONS</span><span id="missionProgressText">0 / 4</span></div>
+					<div class="mission-list" id="missionList"></div>
+				</section>
+				<section class="tasks-section" aria-label="City tasks">
+					<div class="section-heading"><span class="eyebrow">CITY TASKS</span><span>2 ACTIVE</span></div>
+					<div class="task-list">
+						<button class="task-item" type="button"><span class="task-check">○</span><span>避難訓練</span></button>
+						<button class="task-item" type="button"><span class="task-check">○</span><span>mirao city</span></button>
+					</div>
+				</section>
+				<section class="systems-section" aria-label="City systems">
+					<div class="section-heading"><span class="eyebrow">CITY SYSTEMS</span><span id="weatherLabel">CLEAR SKY</span></div>
+					<div class="systems-grid"><div class="system-stat"><span>POLLUTION</span><strong id="pollutionValue">25</strong><small>%</small></div><div class="system-stat"><span>WATER</span><strong id="waterValue">100</strong><small>% supply</small></div><div class="system-stat"><span>POWER</span><strong id="powerValue">100</strong><small>% supply</small></div><div class="system-stat"><span>CRIME RISK</span><strong id="crimeValue">10</strong><small>%</small></div></div>
+					<div class="system-actions"><button type="button" data-system-action="trees">PLANT TREES <small>-8 pollution</small></button><button type="button" data-system-action="water">WATER PLANT <small>+20 water</small></button><button type="button" data-system-action="police">POLICE PATROL <small>-10 crime</small></button><button type="button" data-system-action="tax">COLLECT TAX <small>+¥120 budget</small></button></div>
+					<div class="mission-strip"><span><b id="missionTitle">CITY MISSION</b><small id="missionText">Reduce pollution below 30%.</small></span><button type="button" id="missionAction">CHECK</button></div>
+					<button class="qr-launch" type="button" id="qrLaunch">▣ CREATE MIRAI CITY QR</button>
+					<div class="qr-panel" id="qrPanel" hidden><img id="qrImage" alt="QR code for MIRAI CITY"><p>Scan to launch MIRAI CITY.</p></div>
+				</section>
+			</aside>
+		</main>
+		<section class="planner-mode" aria-label="Professional city planning task">
+			<div class="planner-heading"><div><p class="eyebrow">PROJECT TASK / MASTER PLAN</p><h2>Build a balanced neighborhood.</h2><p>Drag a structure from the palette, or select it and click an empty land cell. Keep services close to homes.</p></div><div class="planner-score"><span>DESIGN SCORE</span><strong id="plannerScore">--</strong><small id="plannerRank">NOT EVALUATED</small></div></div>
+			<div class="planner-layout"><div class="planning-land" id="planningLand" aria-label="Empty city planning land"></div><aside class="planner-tools"><div class="section-heading"><span class="eyebrow">STRUCTURE PALETTE</span><span id="plannerSelected">SELECT</span></div><div class="palette-list"><button class="palette-item" draggable="true" data-plan="road"><span>═</span><b>Road</b><small>connect the district</small></button><button class="palette-item" draggable="true" data-plan="house"><span>▦</span><b>House</b><small>place near roads</small></button><button class="palette-item" draggable="true" data-plan="school"><span>⌂</span><b>School</b><small>near homes, not industry</small></button><button class="palette-item" draggable="true" data-plan="toilet"><span>♧</span><b>Public Toilet</b><small>near homes and parks</small></button><button class="palette-item" draggable="true" data-plan="park"><span>✦</span><b>Park</b><small>open green space</small></button><button class="palette-item" draggable="true" data-plan="hospital"><span>+</span><b>Hospital</b><small>accessible by road</small></button></div><div class="planner-actions"><button id="evaluateCity" type="button">EVALUATE CITY</button><button id="clearPlan" type="button">CLEAR PLAN</button></div><div class="planner-feedback" id="plannerFeedback">Plan a city with roads, homes, services and public space.</div></aside></div>
+		</section>
+	</div>
+	<div class="notification-stack" aria-live="polite"><section class="event-panel" id="eventPanel" hidden><div class="event-topline"><span class="warning-icon">!</span><span id="eventLabel">CITY PROBLEM</span><button class="close-event" id="closeEvent" aria-label="Close notification">×</button></div><div id="eventContent"></div><button class="event-action" id="eventAction"><span>⌂</span> BUILD SCHOOL</button></section><section class="health-event" id="healthEvent" hidden><div class="event-topline"><span class="health-icon">+</span><span>HEALTH EMERGENCY</span><button class="close-event" id="closeHealthEvent" aria-label="Close health notification">×</button></div><div class="event-copy"><p class="jp">「病院が足りません！」</p><p class="en">Health demand is too high. Citizens need a hospital.</p><p class="en" id="healthStats"></p></div><button class="event-action health-action" id="healthAction">+ BUILD HOSPITAL</button></section><div class="toast" id="toast" role="status"></div></div>
+	<div class="evacuation-modal" id="evacuationModal" hidden>
+		<section class="evacuation-card" role="dialog" aria-modal="true" aria-labelledby="evacuationTitle">
+			<div class="event-topline"><span class="warning-icon">!</span><span>避難訓練 / EVACUATION DRILL</span><button class="close-event" id="closeEvacuation" aria-label="Close evacuation drill">×</button></div>
+			<h2 id="evacuationTitle">Emergency preparedness</h2>
+			<p class="evacuation-intro">भूकम्प वा tsunami आउँदा शान्त भएर सुरक्षित ठाउँमा जानुहोस्।</p>
+			<div class="scenario-options"><button class="scenario-button" data-scenario="earthquake" type="button">地震 <small>EARTHQUAKE</small></button><button class="scenario-button" data-scenario="tsunami" type="button">津波 <small>TSUNAMI</small></button></div>
+			<div class="disaster-alert" id="disasterAlert" hidden><strong id="disasterTitle">DISASTER WARNING</strong><span id="disasterMessage"></span><b id="disasterCountdown">READY</b></div>
+			<p class="evacuation-status" id="evacuationStatus">पहिले आपतकालीन अवस्था छान्नुहोस्।</p>
+			<div class="emergency-items"><p class="eyebrow">IMPORTANT ITEMS TO CARRY</p><button class="emergency-item" type="button"><span class="item-check">○</span> पानी / Water</button><button class="emergency-item" type="button"><span class="item-check">○</span> First-aid kit</button><button class="emergency-item" type="button"><span class="item-check">○</span> टर्च / Torch</button><button class="emergency-item" type="button"><span class="item-check">○</span> फोन र कागजात / Phone & documents</button></div>
+			<div class="destination-section"><p class="eyebrow">CHOOSE SAFE DESTINATION</p><div class="destination-options"><button class="destination-button" data-destination="open-space" type="button">OPEN PLAZA <small>खुला मैदान</small></button><button class="destination-button" data-destination="hill-shelter" type="button">HILL SHELTER <small>उचाइको safe zone</small></button></div><div class="route-map" id="routeMap" hidden><div class="route-endpoints"><span>YOU ARE HERE</span><span id="destinationLabel">SAFE PLACE</span></div><div class="route-track"><span class="route-line"></span><button class="evac-person person-one" data-person="1" type="button">●</button><button class="evac-person person-two" data-person="2" type="button">●</button><button class="evac-person person-three" data-person="3" type="button">●</button></div><p id="routeInstructions">Route guidance appears here.</p><p class="people-instruction" id="peopleInstruction">Start evacuation, then guide each person to safety.</p><div class="people-status" id="peopleStatus">0 / 3 people safe</div></div></div>
+			<button class="safe-place-button" id="safePlaceButton" type="button" disabled>EVACUATION START गर्नुस्</button>
+			<div class="game-over-panel" id="gameOverPanel" hidden><strong id="gameOverTitle">GAME OVER</strong><p id="gameOverReason"></p><button id="retryEvacuation" type="button">TRY AGAIN</button></div>
+		</section>
+	</div>
+	<script src="script.js"></script>
+</body>
+</html>
