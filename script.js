@@ -383,6 +383,7 @@ function frame(timestamp) {
   requestAnimationFrame(frame);
 }
 
+
 function startQuest() {
   if (ended) resetQuest();
   if (gameState === "CITY_EXPLORATION") {
