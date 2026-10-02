@@ -111,7 +111,7 @@ function createHeroModel() {
   slash.rotation.z = -0.45;
   slash.visible = false;
   root.add(slash);
-  root.userData = { legs, arms, sword, slash, body };
+  root.userData = { legs, arms, sword, slash, body, head };
   return root;
 }
 
@@ -136,6 +136,120 @@ function createShadow() {
   blade.rotation.z = -0.45;
   root.add(blade);
   root.userData.body = body;
+  return root;
+}
+
+function createVillain() {
+  const root = new THREE.Group();
+  const armor = material(0x14182b, { roughness: 0.35, metalness: 0.68, emissive: 0x180a31, emissiveIntensity: 0.55 });
+  const mantle = material(0x24203d, { roughness: 0.52, metalness: 0.44, emissive: 0x190d38, emissiveIntensity: 0.7 });
+  const energy = new THREE.MeshBasicMaterial({ color: 0x9b66ff, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false });
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.82, 4, 10), armor);
+  body.position.y = 1.05;
+  root.add(body);
+  const mantleMesh = new THREE.Mesh(new THREE.ConeGeometry(0.72, 1.75, 6), mantle);
+  mantleMesh.position.set(0, 0.9, -0.04);
+  mantleMesh.rotation.x = Math.PI;
+  root.add(mantleMesh);
+  sphere(root, 0.29, armor, 0, 1.84, 0, [0.9, 1.08, 0.88]);
+  const visor = box(root, 0.34, 0.075, 0.045, 0x9c65ff, 0, 1.85, 0.244, { emissive: 0x743dff, emissiveIntensity: 3.2, metalness: 0.3 });
+  visor.rotation.z = -0.04;
+  for (const side of [-1, 1]) {
+    const shoulder = box(root, 0.34, 0.24, 0.36, mantle.color, side * 0.39, 1.38, 0, { emissive: 0x30124f, emissiveIntensity: 0.65 });
+    shoulder.rotation.z = side * -0.15;
+  }
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.035, 7, 36), energy);
+  halo.position.y = 2.22;
+  halo.rotation.x = Math.PI / 2.5;
+  root.add(halo);
+  const aura = new THREE.Mesh(new THREE.SphereGeometry(0.86, 18, 14), new THREE.MeshBasicMaterial({ color: 0x5221a0, transparent: true, opacity: 0.12, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+  aura.position.y = 1.15;
+  root.add(aura);
+  const core = sphere(root, 0.12, 0x75f5ff, 0, 1.18, 0.3, [1, 1.2, 0.65], { emissive: 0x34dfff, emissiveIntensity: 3.4 });
+  const light = new THREE.PointLight(0x8c4dff, 0, 10, 2);
+  light.position.set(0, 2.05, 0.4);
+  root.add(light);
+  root.userData = { halo, aura, core, light, body };
+  root.position.set(10.5, 0, -16.4);
+  root.visible = false;
+  return root;
+}
+
+function createEnergyPoint(point) {
+  const root = new THREE.Group();
+  const inactive = new THREE.MeshBasicMaterial({ color: 0x49718f, transparent: true, opacity: 0.3, depthWrite: false });
+  const active = new THREE.MeshBasicMaterial({ color: 0x5cf5ed, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+  const disk = new THREE.Mesh(new THREE.CircleGeometry(1.18, 32), inactive);
+  disk.rotation.x = -Math.PI / 2;
+  disk.position.y = 0.035;
+  root.add(disk);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.055, 7, 40), active);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.09;
+  root.add(ring);
+  const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.36, 0), active);
+  beacon.position.y = 0.65;
+  root.add(beacon);
+  const light = new THREE.PointLight(0x55f4e8, 1.5, 4, 2);
+  light.position.y = 0.8;
+  root.add(light);
+  root.position.set(point.x, 0, point.z);
+  root.userData = { ring, beacon, disk, light };
+  return root;
+}
+
+function createEnergyWave(wave) {
+  const root = new THREE.Group();
+  const warning = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0xff9c67, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }));
+  warning.rotation.x = -Math.PI / 2;
+  warning.position.y = 0.045;
+  root.add(warning);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.065, 7, 56), new THREE.MeshBasicMaterial({ color: 0xff8bca, transparent: true, opacity: 0.86, blending: THREE.AdditiveBlending, depthWrite: false }));
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.12;
+  root.add(ring);
+  root.position.set(wave.x, 0, wave.z);
+  root.userData = { warning, ring };
+  return root;
+}
+
+function createEnergyBarrier(barrier) {
+  const root = new THREE.Group();
+  const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xa078ff, transparent: true, opacity: 0.2, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+  const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x90f8ff, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false });
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.85), wallMaterial);
+  wall.position.y = 0.95;
+  root.add(wall);
+  for (const x of [-1.2, 1.2]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.055, 2, 0.055), frameMaterial);
+    post.position.set(x, 1, 0);
+    root.add(post);
+  }
+  for (const y of [0.04, 1.96]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.055, 0.055), frameMaterial);
+    rail.position.y = y;
+    root.add(rail);
+  }
+  root.position.set(barrier.x, 0, barrier.z);
+  root.userData = { wall, frameMaterial };
+  return root;
+}
+
+function createLocationMarker(location) {
+  const root = new THREE.Group();
+  const color = location.id === "temple" || location.id === "shrine" ? 0xffc78b : 0x69eff4;
+  const glow = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.58, blending: THREE.AdditiveBlending, depthWrite: false });
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(location.radius * 0.56, 28), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.09, depthWrite: false }));
+  disc.rotation.x = -Math.PI / 2;
+  disc.position.y = 0.045;
+  root.add(disc);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(location.radius * 0.46, 0.035, 6, 36), glow);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.09;
+  root.add(ring);
+  root.position.set(location.x, 0, location.z);
+  root.visible = false;
+  root.userData = { ring, disc };
   return root;
 }
 
@@ -448,6 +562,7 @@ function addStars(scene) {
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   const stars = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0xd7ddff, size: 0.06, sizeAttenuation: true, transparent: true, opacity: 0.78 }));
   scene.add(stars);
+  return stars;
 }
 
 function addBackdrop(scene) {
@@ -466,7 +581,7 @@ function addBackdrop(scene) {
     ridge.rotation.y = Math.PI / 5;
     scene.add(ridge);
   }
-  addStars(scene);
+  return { moon, moonRings, stars: addStars(scene) };
 }
 
 function makeRenderer(canvas, options = {}) {
@@ -484,13 +599,27 @@ export function createScene(canvas, previewCanvas) {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x161a4c);
+  const originalSkyColor = scene.background.clone();
+  const daylightSkyColor = new THREE.Color(0x526c8c);
+  const restoredSkyColor = new THREE.Color(0x2b4c78);
   scene.fog = new THREE.Fog(0x1a194a, 37, 105);
+  const originalFogColor = scene.fog.color.clone();
+  const daylightFogColor = new THREE.Color(0x344c6b);
+  const restoredFogColor = new THREE.Color(0x244968);
+  const dayMoonColor = new THREE.Color(0xffd7c5);
+  const nightMoonColor = new THREE.Color(0xf35483);
+  const cycleSkyColor = new THREE.Color();
+  const cycleFogColor = new THREE.Color();
   const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 140);
+  const cameraCurrentQuaternion = new THREE.Quaternion();
+  const cameraTargetQuaternion = new THREE.Quaternion();
+  const cameraLookTarget = new THREE.Vector3();
   const solidRects = [];
   const cameraBlockers = [];
   const cameraRaycaster = new THREE.Raycaster();
   let cameraInitialized = false;
-  scene.add(new THREE.HemisphereLight(0xbecaff, 0x241b42, 2.05));
+  const cityAmbient = new THREE.HemisphereLight(0xbecaff, 0x241b42, 2.05);
+  scene.add(cityAmbient);
   const keyLight = new THREE.DirectionalLight(0xffd3e2, 3.2);
   keyLight.position.set(-5, 15, 11);
   keyLight.castShadow = true;
@@ -510,7 +639,20 @@ export function createScene(canvas, previewCanvas) {
   const gateFill = new THREE.PointLight(0xff42cf, 135, 17, 2);
   gateFill.position.set(WORLD_LENGTH - 5.1, 2.3, 0);
   scene.add(gateFill);
-  addBackdrop(scene);
+  const villainLight = new THREE.PointLight(0x793cff, 0, 18, 2);
+  scene.add(villainLight);
+  const restorationLight = new THREE.PointLight(0x62f7ff, 0, 15, 2);
+  scene.add(restorationLight);
+  const restorationMaterial = new THREE.MeshBasicMaterial({ color: 0x57f5fa, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const restorationLines = [-4.25, 0, 4.25].map((z) => {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(WORLD_LENGTH, 0.065, 0.13), restorationMaterial);
+    line.position.set(0, 0.055, z);
+    line.scale.x = 0;
+    line.visible = false;
+    scene.add(line);
+    return line;
+  });
+  const backdrop = addBackdrop(scene);
 
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH + 8, 54), material(0x171d38, { roughness: 0.44, metalness: 0.38 }));
   floor.rotation.x = -Math.PI / 2;
@@ -541,8 +683,14 @@ export function createScene(canvas, previewCanvas) {
     scene.add(curb);
   }
 
+  const cityLightMaterials = new Set();
   const addCityBuilding = (x, z, width, height, depth, index) => {
     const building = createBuilding(scene, x, z, width, height, depth, index);
+    building.traverse((object) => {
+      if (!object.isMesh || !object.material?.emissiveIntensity) return;
+      cityLightMaterials.add(object.material);
+      object.material.userData.cityBaseIntensity ??= object.material.emissiveIntensity;
+    });
     solidRects.push({ x, z, halfWidth: width / 2 + 0.16, halfDepth: depth / 2 + 0.16 });
     cameraBlockers.push(building.children[0]);
   };
@@ -595,6 +743,11 @@ export function createScene(canvas, previewCanvas) {
     { id: "park", name: "Cherry Blossom Park", x: 38, z: 12.2, radius: 3.1, description: "A quiet garden, pond and blossom trees sit beyond the riverside bridge.", objective: "Search the park for clues." },
     { id: "shrine", name: "Old Shrine", x: 91, z: 1.05, radius: 3.2, description: "Beyond the torii, an old shrine hums with an unfamiliar energy.", objective: "Search the shrine grounds." }
   ];
+  const locationMarkers = locations.map((location) => {
+    const marker = createLocationMarker(location);
+    scene.add(marker);
+    return { id: location.id, marker };
+  });
   const lanterns = [
     ...shoppingLanterns,
     createLantern(scene, 8.65, -5.7, 0xffc477),
@@ -613,9 +766,11 @@ export function createScene(canvas, previewCanvas) {
     }
   });
   scene.add(hero);
+  const villain = createVillain();
+  scene.add(villain);
 
-  const petalPositions = new Float32Array(27 * 3);
-  for (let index = 0; index < 27; index += 1) {
+  const petalPositions = new Float32Array(54 * 3);
+  for (let index = 0; index < 54; index += 1) {
     petalPositions[index * 3] = Math.sin(index * 12.17) * 9;
     petalPositions[index * 3 + 1] = 0.4 + (index * 7 % 41) / 8;
     petalPositions[index * 3 + 2] = Math.cos(index * 8.23) * 7;
@@ -623,15 +778,22 @@ export function createScene(canvas, previewCanvas) {
   const petalOffsets = petalPositions.slice();
   const petalGeometry = new THREE.BufferGeometry();
   petalGeometry.setAttribute("position", new THREE.BufferAttribute(petalPositions, 3));
+  petalGeometry.setDrawRange(0, 27);
   const petals = new THREE.Points(petalGeometry, new THREE.PointsMaterial({ color: 0xffa8d4, size: 0.105, transparent: true, opacity: 0.72, depthWrite: false, sizeAttenuation: true }));
   scene.add(petals);
 
   const shardMap = new Map();
   const enemyMap = new Map();
+  const energyPointMap = new Map();
+  const energyWaveMap = new Map();
+  const energyBarrierMap = new Map();
   const bursts = [];
   let currentShards = [];
   let currentEnemies = [];
   let lastPreviewRender = 0;
+  let smoothedHeading = Math.PI;
+  let smoothedStride = 0;
+  let smoothedLean = 0;
 
   const previewRenderer = makeRenderer(previewCanvas, { antialias: false, alpha: false, pixelRatio: 1 });
   const previewScene = new THREE.Scene();
@@ -721,6 +883,57 @@ export function createScene(canvas, previewCanvas) {
     });
   }
 
+  function removeChallengeVisuals(map, activeIds) {
+    for (const [id, group] of map) {
+      if (activeIds.has(id)) continue;
+      scene.remove(group);
+      group.traverse((object) => {
+        if (!object.isMesh) return;
+        object.geometry.dispose();
+        if (Array.isArray(object.material)) object.material.forEach((entry) => entry.dispose());
+        else object.material.dispose();
+      });
+      map.delete(id);
+    }
+  }
+
+  function syncChallenge(challenge) {
+    const challengeShown = challenge && challenge.villainState !== "IDLE";
+    const points = challengeShown ? challenge.points : [];
+    const waves = challenge?.waves || [];
+    const barriers = challenge?.barriers || [];
+    const pointIds = new Set(points.map((point) => point.id));
+    const waveIds = new Set(waves.map((wave) => wave.id));
+    const barrierIds = new Set(barriers.map((barrier) => barrier.id));
+    removeChallengeVisuals(energyPointMap, pointIds);
+    removeChallengeVisuals(energyWaveMap, waveIds);
+    removeChallengeVisuals(energyBarrierMap, barrierIds);
+    points.forEach((point) => {
+      let visual = energyPointMap.get(point.id);
+      if (!visual) {
+        visual = createEnergyPoint(point);
+        energyPointMap.set(point.id, visual);
+        scene.add(visual);
+      }
+    });
+    waves.forEach((wave) => {
+      let visual = energyWaveMap.get(wave.id);
+      if (!visual) {
+        visual = createEnergyWave(wave);
+        energyWaveMap.set(wave.id, visual);
+        scene.add(visual);
+      }
+    });
+    barriers.forEach((barrier) => {
+      let visual = energyBarrierMap.get(barrier.id);
+      if (!visual) {
+        visual = createEnergyBarrier(barrier);
+        energyBarrierMap.set(barrier.id, visual);
+        scene.add(visual);
+      }
+    });
+  }
+
   function resolveMovement(player, deltaX, deltaZ) {
     const radius = 0.38;
     let x = player.x * UNIT;
@@ -750,6 +963,18 @@ export function createScene(canvas, previewCanvas) {
     return closest;
   }
 
+  function getNearbyEnergyPoint(player, points) {
+    const playerX = player.x * UNIT;
+    const playerZ = player.z || 0;
+    let closest = null;
+    for (const point of points || []) {
+      if (point.activated) continue;
+      const distance = Math.hypot(playerX - point.x, playerZ - point.z);
+      if (distance <= (point.interactionRadius || 2.15) && (!closest || distance < closest.distance)) closest = { ...point, distance };
+    }
+    return closest;
+  }
+
   function getLocationById(id) {
     return locations.find((location) => location.id === id) || null;
   }
@@ -767,18 +992,35 @@ export function createScene(canvas, previewCanvas) {
     }
   }
 
+  function smoothCameraLookAt(target, elapsed, speed) {
+    cameraCurrentQuaternion.copy(camera.quaternion);
+    camera.lookAt(target);
+    cameraTargetQuaternion.copy(camera.quaternion);
+    camera.quaternion.copy(cameraCurrentQuaternion).slerp(cameraTargetQuaternion, 1 - Math.exp(-elapsed * speed));
+  }
+
   function render(state) {
     const elapsed = Math.min(state.delta || 16, 40) / 1000;
     const time = state.time || 0;
     syncObjects(state.shards, state.enemies);
+    syncChallenge(state.challenge);
     const heroElevation = Math.max(0, (470 - (state.player.y + state.player.height)) * UNIT);
     const heroX = (state.player.x + state.player.width / 2) * UNIT;
     const heroZ = state.player.z || 0;
     hero.position.set(heroX, heroElevation + Math.sin(time / 175) * (state.player.onGround ? 0.025 : 0), heroZ);
-    hero.rotation.y = state.player.heading ?? Math.PI;
-    hero.userData.body.rotation.z = Math.sin(time / 420) * 0.025;
+    const targetHeading = state.player.heading ?? Math.PI;
+    const headingDelta = Math.atan2(Math.sin(targetHeading - smoothedHeading), Math.cos(targetHeading - smoothedHeading));
+    smoothedHeading += headingDelta * (1 - Math.exp(-elapsed * 12));
+    hero.rotation.y = smoothedHeading;
     const movement = Math.hypot(state.player.velocityX || 0, state.player.velocityZ || 0);
-    const stride = Math.sin(time / (state.player.running ? 48 : 78)) * Math.min(1, movement / 2.5) * 0.7;
+    const targetStride = Math.min(1, movement / 2.5);
+    smoothedStride += (targetStride - smoothedStride) * (1 - Math.exp(-elapsed * 10));
+    const targetLean = THREE.MathUtils.clamp((state.player.velocityX || 0) * 0.012, -0.075, 0.075);
+    smoothedLean += (targetLean - smoothedLean) * (1 - Math.exp(-elapsed * 8));
+    hero.rotation.z = smoothedLean;
+    hero.userData.body.rotation.z = Math.sin(time / 420) * 0.025 - smoothedLean * 0.3;
+    hero.userData.head.rotation.z = Math.sin(time / 850) * 0.018 - smoothedLean * 0.14;
+    const stride = Math.sin(time / (state.player.running ? 48 : 78)) * smoothedStride * 0.7;
     hero.userData.legs[0].rotation.z = stride;
     hero.userData.legs[1].rotation.z = -stride;
     hero.userData.arms[0].rotation.z = -stride * 0.6;
@@ -787,6 +1029,29 @@ export function createScene(canvas, previewCanvas) {
     hero.userData.slash.scale.setScalar(0.75 + state.player.attackTime / 650);
     hero.userData.slash.material.opacity = Math.min(1, state.player.attackTime / 90);
     hero.visible = !(state.player.invulnerable > 0 && Math.floor(time / 90) % 2 === 0);
+
+    const challenge = state.challenge;
+    const villainActive = challenge && ["INTRO", "CHALLENGE", "DEFEATED", "ENDING"].includes(challenge.villainState);
+    villain.visible = Boolean(villainActive);
+    if (villainActive) {
+      const introProgress = challenge.villainState === "INTRO" ? Math.min(1, Math.max(0, (time - challenge.introStartedAt) / 1000)) : 1;
+      const villainPosition = challenge.villainPosition || { x: 10.5, z: -16.4 };
+      villain.position.set(villainPosition.x, Math.sin(time / 480) * 0.08, villainPosition.z);
+      villain.rotation.y = Math.sin(time / 1500) * 0.08;
+      villain.scale.setScalar(0.18 + introProgress * 0.82);
+      villain.userData.halo.rotation.y = time / 1250;
+      villain.userData.aura.material.opacity = 0.1 + Math.sin(time / 280) * 0.025;
+      villain.userData.core.material.emissiveIntensity = 2.8 + Math.sin(time / 210) * 0.7;
+      const reacting = time < (challenge.reactionUntil || 0);
+      villain.userData.body.material.emissive.setHex(reacting ? 0x35206f : 0x180a31);
+      villain.userData.body.material.emissiveIntensity = reacting ? 1.8 : 0.55;
+      villain.userData.light.intensity = (challenge.villainState === "INTRO" ? 34 : 16) * introProgress;
+      villainLight.position.set(villain.position.x, 2.8, villain.position.z);
+      villainLight.intensity = (challenge.villainState === "INTRO" ? 45 : 12) * introProgress;
+      if (challenge.villainState === "ENDING") villain.scale.setScalar(Math.max(0, 1 - Math.min(1, challenge.endingProgress || 0)));
+    } else {
+      villainLight.intensity = 0;
+    }
 
     state.shards.forEach((shard, index) => {
       const group = shardMap.get(shard);
@@ -804,9 +1069,53 @@ export function createScene(canvas, previewCanvas) {
       group.rotation.y = Math.sin(time / 500 + enemy.phase) * 0.08;
       group.userData.body.material.emissive.setHex(enemy.hitFlash > 0 ? 0x55203e : 0x000000);
     });
+    for (const point of challenge?.points || []) {
+      const visual = energyPointMap.get(point.id);
+      if (!visual) continue;
+      const color = point.activated ? 0x67ffe0 : 0x69c8ff;
+      visual.userData.ring.material.color.setHex(color);
+      visual.userData.disk.material.color.setHex(point.activated ? 0x34cbb5 : 0x49718f);
+      visual.userData.disk.material.opacity = point.activated ? 0.42 : 0.22;
+      visual.userData.ring.rotation.z = time / 1100;
+      visual.userData.beacon.rotation.y = time / 680;
+      visual.userData.beacon.position.y = 0.58 + Math.sin(time / 320 + point.id) * 0.13;
+      visual.userData.beacon.scale.setScalar(point.activated ? 1.1 : 0.74 + Math.sin(time / 280 + point.id) * 0.12);
+      visual.userData.light.intensity = point.activated ? 8 : 2.2 + Math.sin(time / 300 + point.id) * 0.8;
+    }
+    for (const wave of challenge?.waves || []) {
+      const visual = energyWaveMap.get(wave.id);
+      if (!visual) continue;
+      const warning = wave.warning > 0;
+      visual.userData.warning.visible = warning;
+      visual.userData.warning.scale.setScalar(warning ? 1.9 + Math.sin(time / 85) * 0.12 : 0.001);
+      visual.userData.warning.material.opacity = warning ? 0.12 + Math.sin(time / 85) * 0.06 : 0;
+      visual.userData.ring.visible = !warning;
+      visual.userData.ring.scale.setScalar(Math.max(0.05, wave.radius));
+      visual.userData.ring.material.opacity = warning ? 0 : Math.max(0, 1 - wave.radius / 12);
+    }
+    for (const barrier of challenge?.barriers || []) {
+      const visual = energyBarrierMap.get(barrier.id);
+      if (!visual) continue;
+      visual.rotation.y = Math.sin(time / 650 + barrier.id) * 0.18;
+      visual.userData.wall.material.opacity = 0.12 + Math.sin(time / 170 + barrier.id) * 0.07;
+      visual.userData.frameMaterial.opacity = 0.48 + Math.sin(time / 210 + barrier.id) * 0.22;
+    }
+    const restorationProgress = Math.max(0, Math.min(1, challenge?.restorationProgress || 0));
+    const daylight = 0.5 - 0.5 * Math.cos(time / 42000);
+    const nightGlow = 1 - daylight;
     lanterns.forEach((lantern, index) => {
-      lantern.userData.glass.emissiveIntensity = 1.9 + Math.sin(time / 310 + index * 1.7) * 0.4;
+      lantern.userData.glass.emissiveIntensity = 1 + Math.sin(time / 310 + index * 1.7) * 0.2 + nightGlow * 0.32 + restorationProgress * 0.9;
     });
+    const nearbyLocationId = state.nearbyLocation?.id;
+    for (const locationMarker of locationMarkers) {
+      const visible = locationMarker.id === nearbyLocationId;
+      locationMarker.marker.visible = visible;
+      if (!visible) continue;
+      const pulse = 0.5 + 0.5 * Math.sin(time / 300);
+      locationMarker.marker.userData.ring.material.opacity = 0.42 + pulse * 0.28;
+      locationMarker.marker.userData.ring.scale.setScalar(0.94 + pulse * 0.09);
+      locationMarker.marker.userData.disc.material.opacity = 0.055 + pulse * 0.035;
+    }
     const petalAttribute = petalGeometry.getAttribute("position");
     for (let index = 0; index < petalAttribute.count; index += 1) {
       const baseY = petalOffsets[index * 3 + 1];
@@ -818,6 +1127,31 @@ export function createScene(canvas, previewCanvas) {
       );
     }
     petalAttribute.needsUpdate = true;
+    cityAmbient.intensity = 1.65 + daylight * 0.32 + restorationProgress * 0.9;
+    keyLight.intensity = 2.6 + daylight * 0.65 + restorationProgress * 1.1;
+    neonFill.intensity = 54 + nightGlow * 20 + restorationProgress * 82;
+    pinkFill.intensity = 70 + nightGlow * 24 + restorationProgress * 75;
+    gateFill.intensity = 82 + nightGlow * 20 + restorationProgress * 83;
+    cycleSkyColor.copy(originalSkyColor).lerp(daylightSkyColor, daylight * 0.72);
+    cycleFogColor.copy(originalFogColor).lerp(daylightFogColor, daylight * 0.52);
+    scene.background.copy(cycleSkyColor).lerp(restoredSkyColor, restorationProgress);
+    scene.fog.color.copy(cycleFogColor).lerp(restoredFogColor, restorationProgress);
+    backdrop.moon.material.color.copy(nightMoonColor).lerp(dayMoonColor, daylight * 0.8);
+    backdrop.moonRings.material.opacity = 0.8 * (1 - daylight * 0.72);
+    backdrop.stars.material.opacity = 0.78 * (1 - daylight * 0.88);
+    cityLightMaterials.forEach((lightMaterial) => {
+      lightMaterial.emissiveIntensity = lightMaterial.userData.cityBaseIntensity * (0.38 + nightGlow * 0.18 + restorationProgress * 0.88);
+    });
+    restorationLines.forEach((line) => {
+      line.visible = restorationProgress > 0;
+      line.scale.x = restorationProgress;
+      line.position.x = -WORLD_LENGTH / 2 + WORLD_LENGTH * restorationProgress / 2;
+      line.material.opacity = restorationProgress > 0 ? 0.5 + restorationProgress * 0.3 : 0;
+    });
+    restorationLight.position.set(-1 + WORLD_LENGTH * restorationProgress, 1.1, 0);
+    restorationLight.intensity = (1 - restorationProgress) * restorationProgress * 120;
+    petalGeometry.setDrawRange(0, 27 + Math.floor(restorationProgress * 27));
+    petals.material.size = 0.105 + restorationProgress * 0.035;
     for (let index = bursts.length - 1; index >= 0; index -= 1) {
       const particle = bursts[index];
       particle.userData.life -= elapsed;
@@ -833,27 +1167,40 @@ export function createScene(canvas, previewCanvas) {
     }
 
     const orbitYaw = state.cameraOrbit || 0;
-    const focus = new THREE.Vector3(heroX, heroElevation + 1.12, heroZ);
-    const desiredCamera = new THREE.Vector3(
-      heroX + Math.sin(orbitYaw) * 6.2,
-      Math.max(1.85, focus.y + 3.05),
-      heroZ + Math.cos(orbitYaw) * 6.2
-    );
-    const cameraDirection = desiredCamera.clone().sub(focus);
-    const cameraDistance = cameraDirection.length();
-    cameraDirection.normalize();
-    cameraRaycaster.set(focus, cameraDirection);
-    cameraRaycaster.far = cameraDistance;
-    const obstruction = cameraRaycaster.intersectObjects(cameraBlockers, true)[0];
-    if (obstruction) desiredCamera.copy(focus).addScaledVector(cameraDirection, Math.max(2.4, obstruction.distance - 0.45));
-    desiredCamera.y = Math.max(1.85, desiredCamera.y);
-    if (!cameraInitialized) {
-      camera.position.copy(desiredCamera);
-      cameraInitialized = true;
+    if (challenge?.villainState === "INTRO") {
+      cameraLookTarget.set(villain.position.x, 1.35, villain.position.z);
+      const desiredCamera = new THREE.Vector3(villain.position.x + 4.5, 3.7, villain.position.z + 6.2);
+      if (!cameraInitialized) {
+        camera.position.copy(desiredCamera);
+        cameraInitialized = true;
+      } else {
+        camera.position.lerp(desiredCamera, 1 - Math.exp(-elapsed * 2.3));
+      }
+      smoothCameraLookAt(cameraLookTarget, elapsed, 3.4);
     } else {
-      camera.position.lerp(desiredCamera, 1 - Math.exp(-elapsed * 7));
+      const focus = new THREE.Vector3(heroX, heroElevation + 1.12, heroZ);
+      const desiredCamera = new THREE.Vector3(
+        heroX + Math.sin(orbitYaw) * 6.2,
+        Math.max(1.85, focus.y + 3.05),
+        heroZ + Math.cos(orbitYaw) * 6.2
+      );
+      const cameraDirection = desiredCamera.clone().sub(focus);
+      const cameraDistance = cameraDirection.length();
+      cameraDirection.normalize();
+      cameraRaycaster.set(focus, cameraDirection);
+      cameraRaycaster.far = cameraDistance;
+      const obstruction = cameraRaycaster.intersectObjects(cameraBlockers, true)[0];
+      if (obstruction) desiredCamera.copy(focus).addScaledVector(cameraDirection, Math.max(2.4, obstruction.distance - 0.45));
+      desiredCamera.y = Math.max(1.85, desiredCamera.y);
+      if (!cameraInitialized) {
+        camera.position.copy(desiredCamera);
+        cameraInitialized = true;
+      } else {
+        camera.position.lerp(desiredCamera, 1 - Math.exp(-elapsed * 7));
+      }
+      cameraLookTarget.set(focus.x - Math.sin(orbitYaw) * 1.25, focus.y + 0.2, focus.z - Math.cos(orbitYaw) * 1.25);
+      smoothCameraLookAt(cameraLookTarget, elapsed, 8);
     }
-    camera.lookAt(focus.x - Math.sin(orbitYaw) * 1.25, focus.y + 0.2, focus.z - Math.cos(orbitYaw) * 1.25);
     renderer.render(scene, camera);
     previewHero.rotation.y = Math.sin(time / 1800) * 0.18;
     if (time - lastPreviewRender > 32) {
@@ -873,6 +1220,7 @@ export function createScene(canvas, previewCanvas) {
     syncObjects,
     resolveMovement,
     getNearbyLocation,
+    getNearbyEnergyPoint,
     getLocationById,
     spawnBurst,
     dispose() {

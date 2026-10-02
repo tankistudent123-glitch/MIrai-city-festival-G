@@ -20,7 +20,10 @@
         <span class="brand-name">MIRAI<em>QUEST</em><small>NEON CITY ADVENTURE</small></span>
       </a>
       <div class="top-meta"><span class="live-dot"></span><span>CHAPTER 01</span><i></i><span>NAGOYA, JP</span></div>
-      <button class="icon-button" id="restartButton" type="button" aria-label="Restart quest" title="Restart quest">↻</button>
+      <div class="header-actions">
+        <button class="icon-button pause-header-button" id="pauseButton" type="button" aria-label="Pause game" title="Pause game" hidden>Ⅱ</button>
+        <button class="icon-button" id="restartButton" type="button" aria-label="Restart quest" title="Restart quest">↻</button>
+      </div>
     </header>
 
     <section class="hero-line" id="top" aria-label="Quest introduction">
@@ -33,12 +36,12 @@
         <div class="game-frame">
           <canvas id="gameCanvas" aria-label="Third-person 3D adventure in a neon Japanese city. Use W A S D or arrow keys to move, Shift to run, Space to jump, and drag to orbit the camera. Touch controls are available on mobile." role="img"></canvas>
           <div class="game-topline">
-            <div class="chapter-tag"><span class="chapter-icon">桜</span><span><b>EXPLORE THE CITY</b><small id="locationName">SAKURA STREET</small></span></div>
+            <div class="chapter-tag"><span class="chapter-icon">桜</span><span><b>MIRAI QUEST</b><small id="locationName">SAKURA STREET</small></span></div>
             <div class="game-stats"><span><b id="shardCount">00</b><small>SHARDS</small></span><span class="stat-divider"></span><span><b id="enemyCount">04</b><small>SHADOWS</small></span></div>
           </div>
-          <div class="health-display" aria-label="Player health"><span>HP</span><div class="health-track"><i id="healthFill"></i></div><b id="healthValue">100</b></div>
+          <div class="health-display" aria-label="Player health"><span id="healthLabel">HP</span><div class="health-track"><i id="healthFill"></i></div><b id="healthValue">100</b></div>
           <div class="mission-chip"><span class="mission-star">✦</span><span><small>ACTIVE QUEST</small><b id="missionText">Find the gate · 0 / 5 shards</b></span></div>
-          <button class="interaction-prompt" id="interactionPrompt" type="button" hidden><kbd id="interactionKey">E</kbd><span id="interactionText">Press to Explore</span><b>↗</b></button>
+          <button class="interaction-prompt" id="interactionPrompt" type="button" hidden><kbd id="interactionKey">E</kbd><span id="interactionText">Press E to interact</span><b>↗</b></button>
           <div class="start-screen" id="startScreen">
             <div class="start-mark">✦</div><p class="eyebrow">A NEON JAPANESE ADVENTURE</p><h2>YOUR CITY.<br><em>YOUR FUTURE.</em></h2>
             <p>Walk beneath the sakura. Find your way<br>through a city where old and new meet.</p>
@@ -49,6 +52,23 @@
             <p class="eyebrow" id="endEyebrow">QUEST COMPLETE</p><h2 id="endTitle">NAGOYA<br><em>IS YOURS.</em></h2>
             <p id="endMessage">The sakura gate is open again.</p>
             <button class="primary-button" id="playAgainButton" type="button"><span>PLAY AGAIN</span><b>↻</b></button>
+          </div>
+          <div class="pause-overlay" id="pauseOverlay" hidden>
+            <section class="pause-panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+              <p class="eyebrow">PAUSED</p>
+              <h2 id="pauseTitle">MIRAI QUEST</h2>
+              <div class="pause-actions">
+                <button class="pause-menu-button" id="resumeButton" type="button">RESUME</button>
+                <button class="pause-menu-button" id="questsButton" type="button">QUESTS</button>
+                <button class="pause-menu-button" id="continueButton" type="button">CONTINUE</button>
+              </div>
+              <section class="pause-quest-summary" id="pauseQuestSummary" hidden>
+                <span>CURRENT MISSION</span>
+                <h3 id="pauseQuestTitle">Mysterious Signal</h3>
+                <p id="pauseQuestObjective">Investigate the strange signal in the city.</p>
+                <b id="pauseQuestProgress">0 / 7 QUESTS COMPLETE</b>
+              </section>
+            </section>
           </div>
           <div class="game-bottomline"><span><i class="sound-wave">♫</i> ORIGINAL QUEST · 01</span><span id="gameStatus">READY TO PLAY</span></div>
         </div>
@@ -72,11 +92,30 @@
         <section class="quest-card">
           <div class="rail-heading"><span>CURRENT QUEST</span><span class="quest-live" id="questStateLabel"><i></i> NOT STARTED</span></div>
           <div class="quest-title"><span class="quest-icon">⌖</span><div><h3 id="questTitle">Mysterious Signal</h3><p id="questObjective">Investigate the strange signal in the city.</p></div></div>
+          <ul class="quest-checklist" id="questChecklist" aria-label="Quest objectives">
+            <li data-objective="city" aria-label="Explore the city, not complete"><span aria-hidden="true">○</span><span>Explore the city</span></li>
+            <li data-objective="temple" aria-label="Visit the temple, not complete"><span aria-hidden="true">○</span><span>Visit the temple</span></li>
+            <li data-objective="source" aria-label="Find the energy source, not complete"><span aria-hidden="true">○</span><span>Find the energy source</span></li>
+          </ul>
           <div class="quest-progress-row"><span>PROGRESS</span><b id="questProgressText">0 / 7</b></div>
           <div class="quest-progress-track"><span id="questProgressFill"></span></div>
           <div class="quest-location-row"><span>⌖ LOCATION</span><b id="questLocation">SAKURA STREET</b></div>
           <p class="quest-story" id="questStory" aria-live="polite">Explore the city to trace the signal.</p>
+          <div class="restoration-meter" aria-label="City restoration progress">
+            <div class="restoration-heading"><span>CITY RESTORATION</span><b id="restorationProgressValue">0%</b></div>
+            <div class="restoration-track" role="progressbar" aria-label="City restoration" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="restorationProgressFill"></span></div>
+            <p id="restorationStageLabel">STAGE 1 · SIGNAL AWAKENING</p>
+          </div>
           <div class="quest-final-state" id="questFinalState" hidden><b>FINAL CHALLENGE UNLOCKED</b><span>The mystery leads to the castle...</span></div>
+          <div class="challenge-panel" id="challengePanel" hidden>
+            <b class="challenge-heading">FINAL CHALLENGE</b>
+            <p id="challengeObjective">Restore the 3 city energy points.</p>
+            <div class="challenge-stat"><span>ENERGY POINTS</span><b id="energyPointsProgress">0 / 3</b></div>
+            <div class="challenge-track"><span id="energyPointsFill"></span></div>
+            <div class="challenge-stat energy-stat"><span>PLAYER ENERGY</span><b id="playerEnergyValue">100%</b></div>
+            <div class="challenge-track player-energy-track"><span id="playerEnergyFill"></span></div>
+            <p class="challenge-hint" id="challengeHint">Avoid the energy waves and activate each point.</p>
+          </div>
         </section>
 
         <section class="location-card">
@@ -98,6 +137,7 @@
       <h2 id="locationTitle">Ancient Castle</h2>
       <p class="dialog-description" id="locationDescription"></p>
       <div class="dialog-objective"><span>FIELD OBJECTIVE</span><b id="locationObjective"></b></div>
+      <button class="challenge-start-button" id="challengeStartButton" type="button" hidden>BEGIN FINAL CHALLENGE <b>↗</b></button>
       <div class="dialog-bottom"><span><i></i> LOCATION DISCOVERED</span><span>PRESS ESC TO CLOSE</span></div>
     </section>
   </div>
