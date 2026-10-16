@@ -27,10 +27,169 @@ function registerLandmarkCollision(solidRects, cameraBlockers, x, z, halfWidth, 
   cameraBlockers.push(object);
 }
 
-function createHeroModel() {
+function createMainHeroModel() {
+  const root = new THREE.Group();
+  const skin = material(0xd49da0, { roughness: 0.78 });
+  const hair = material(0xf3f3ff, { color: 0xf3f3ff, roughness: 0.31, metalness: 0.08, emissive: 0x5c5b83, emissiveIntensity: 0.12 });
+  const hairShade = material(0xb9b9d8, { roughness: 0.38, metalness: 0.08 });
+  const jacket = material(0x10182f, { roughness: 0.48, metalness: 0.24 });
+  const jacketBlue = material(0x1a2b52, { roughness: 0.4, metalness: 0.34 });
+  const collar = material(0x080d20, { roughness: 0.36, metalness: 0.38 });
+  const pants = material(0x101528, { roughness: 0.66, metalness: 0.18 });
+  const blueEye = material(0x25caff, { emissive: 0x00aaff, emissiveIntensity: 2.8, roughness: 0.18, metalness: 0.3 });
+  const pinkEye = material(0xe86cff, { emissive: 0xc52cff, emissiveIntensity: 2.8, roughness: 0.18, metalness: 0.3 });
+  const pupil = material(0x171a36, { roughness: 0.18 });
+  const glow = material(0x9deaff, { emissive: 0x48bfff, emissiveIntensity: 2.5, metalness: 0.42, roughness: 0.2 });
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.63, 4, 10), jacket);
+  body.position.y = 1.02;
+  root.add(body);
+  box(root, 0.31, 0.59, 0.08, jacketBlue, 0, 1.1, 0.214, { roughness: 0.43, metalness: 0.35 });
+  box(root, 0.055, 0.47, 0.035, glow, 0, 1.15, 0.263, { emissive: 0x4bd5ff, emissiveIntensity: 0.85 });
+  const hem = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.31, 0.48, 8, 1), jacket);
+  hem.position.y = 0.59;
+  hem.rotation.y = Math.PI / 8;
+  root.add(hem);
+  box(root, 0.59, 0.23, 0.35, jacket, 0, 1.39, 0.015, { roughness: 0.42, metalness: 0.32 });
+  const leftCollar = box(root, 0.18, 0.42, 0.29, collar, -0.24, 1.52, 0.17);
+  leftCollar.rotation.z = 0.12;
+  const rightCollar = box(root, 0.18, 0.42, 0.29, collar, 0.24, 1.52, 0.17);
+  rightCollar.rotation.z = -0.12;
+  box(root, 0.24, 0.24, 0.2, collar, 0, 1.49, 0.12);
+  for (const side of [-1, 1]) {
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), jacketBlue);
+    shoulder.position.set(side * 0.27, 1.3, 0);
+    shoulder.scale.set(1.1, 0.76, 1.02);
+    root.add(shoulder);
+  }
+
+  const legs = [];
+  for (const side of [-1, 1]) {
+    const leg = new THREE.Group();
+    leg.position.set(side * 0.14, 0.45, 0);
+    const legMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.31, 3, 8), pants);
+    legMesh.position.y = -0.19;
+    leg.add(legMesh);
+    box(leg, 0.19, 0.13, 0.31, 0x080d19, 0, -0.39, 0.055, { roughness: 0.42, metalness: 0.32 });
+    root.add(leg);
+    legs.push(leg);
+  }
+
+  const arms = [];
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Group();
+    arm.position.set(side * 0.34, 1.29, 0.02);
+    const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.34, 3, 8), jacket);
+    sleeve.position.y = -0.18;
+    sleeve.rotation.z = side * -0.16;
+    arm.add(sleeve);
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.12, 0.14, 8), jacketBlue);
+    cuff.position.y = -0.37;
+    arm.add(cuff);
+    sphere(arm, 0.09, skin, 0, -0.44, 0.04, [0.92, 1, 0.85]);
+    root.add(arm);
+    arms.push(arm);
+  }
+
+  const head = sphere(root, 0.286, skin, 0, 1.91, 0.015, [0.92, 1.08, 0.88]);
+  head.castShadow = true;
+  sphere(root, 0.22, skin, 0, 1.77, 0.07, [0.76, 0.58, 0.76]);
+  sphere(root, 0.305, hair, 0, 2.045, -0.025, [1.08, 0.86, 1.02]);
+  sphere(root, 0.19, hairShade, 0, 2.02, -0.13, [1.2, 0.72, 0.95]);
+  const makeHairLock = (length, width, bend) => {
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+    const indices = [];
+    const ringCount = 8;
+    const sides = 9;
+    for (let ring = 0; ring <= ringCount; ring += 1) {
+      const t = ring / ringCount;
+      const radius = width * (0.76 + Math.sin(t * Math.PI) * 0.14) * Math.pow(1 - t, 0.92) + 0.001;
+      const centerX = bend * t * t;
+      const centerZ = 0.055 * Math.sin(t * Math.PI) + 0.04 * t * t;
+      for (let side = 0; side < sides; side += 1) {
+        const angle = side / sides * Math.PI * 2;
+        vertices.push(centerX + Math.cos(angle) * radius, length * t, centerZ + Math.sin(angle) * radius * 0.72);
+      }
+    }
+    for (let ring = 0; ring < ringCount; ring += 1) {
+      for (let side = 0; side < sides; side += 1) {
+        const first = ring * sides + side;
+        const next = ring * sides + (side + 1) % sides;
+        const lowerFirst = (ring + 1) * sides + side;
+        const lowerNext = (ring + 1) * sides + (side + 1) % sides;
+        indices.push(first, lowerFirst, next, next, lowerFirst, lowerNext);
+      }
+    }
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  };
+  const spike = (x, y, z, direction, length, width, tint = false, bend = 0) => {
+    const mesh = new THREE.Mesh(makeHairLock(length, width, bend), tint ? hairShade : hair);
+    const vector = new THREE.Vector3(...direction).normalize();
+    mesh.position.set(x, y, z);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vector);
+    mesh.castShadow = true;
+    root.add(mesh);
+  };
+  for (let index = 0; index < 17; index += 1) {
+    const angle = index * 2.399;
+    const spread = 0.13 + (index % 3) * 0.025;
+    const x = Math.cos(angle) * spread;
+    const z = Math.sin(angle) * spread;
+    const length = 0.54 + ((index * 7) % 5) * 0.065;
+    spike(x, 2.015 + Math.sin(angle * 2) * 0.025, z, [Math.cos(angle) * 0.76, 0.38 + (index % 4) * 0.07, Math.sin(angle) * 0.76], length, 0.145 + (index % 3) * 0.018, index % 5 === 0, Math.sin(angle) * 0.07);
+  }
+  spike(-0.18, 2.13, -0.12, [-0.25, 0.9, -0.32], 0.64, 0.19, false, -0.08);
+  spike(0.12, 2.17, -0.14, [0.14, 0.92, -0.34], 0.59, 0.17, true, 0.08);
+  spike(-0.17, 2.37, 0.19, [-0.3, -0.95, 0.12], 0.36, 0.12, false, -0.055);
+  spike(0.02, 2.4, 0.2, [-0.03, -1, 0.12], 0.38, 0.125, true, 0.035);
+  spike(0.19, 2.36, 0.17, [0.35, -0.9, 0.1], 0.35, 0.115, false, 0.06);
+  sphere(root, 0.068, skin, -0.286, 1.85, 0.005, [0.72, 1.1, 0.6]);
+  sphere(root, 0.068, skin, 0.286, 1.85, 0.005, [0.72, 1.1, 0.6]);
+  box(root, 0.13, 0.025, 0.035, hairShade, -0.11, 2.005, 0.258).rotation.z = 0.08;
+  box(root, 0.13, 0.025, 0.035, hairShade, 0.11, 2.005, 0.258).rotation.z = -0.08;
+  sphere(root, 0.09, 0xf9f5ff, -0.11, 1.95, 0.258, [1.18, 0.72, 0.48]);
+  sphere(root, 0.09, 0xf9f5ff, 0.11, 1.95, 0.258, [1.18, 0.72, 0.48]);
+  sphere(root, 0.055, blueEye, -0.11, 1.95, 0.296, [0.94, 1, 0.65]);
+  sphere(root, 0.055, pinkEye, 0.11, 1.95, 0.296, [0.94, 1, 0.65]);
+  sphere(root, 0.027, pupil, -0.11, 1.95, 0.33, [0.88, 1, 0.55]);
+  sphere(root, 0.027, pupil, 0.11, 1.95, 0.33, [0.88, 1, 0.55]);
+  sphere(root, 0.016, 0xffffff, -0.129, 1.977, 0.35, [0.7, 0.7, 0.5]);
+  sphere(root, 0.016, 0xffffff, 0.091, 1.977, 0.35, [0.7, 0.7, 0.5]);
+  sphere(root, 0.028, 0xc98c91, 0, 1.83, 0.315, [0.62, 0.82, 0.52]);
+  const mouth = box(root, 0.105, 0.014, 0.012, 0x653e56, 0, 1.735, 0.284, { roughness: 0.86 });
+  mouth.rotation.z = -0.015;
+
+  const sword = new THREE.Group();
+  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.09, 1.16, 8), glow);
+  blade.position.y = 0.47;
+  blade.rotation.z = -0.36;
+  sword.add(blade);
+  const guard = box(sword, 0.28, 0.065, 0.1, 0x9a71ff, 0, 0.06, 0, { emissive: 0x674cff, emissiveIntensity: 1.2, metalness: 0.55 });
+  guard.rotation.z = -0.36;
+  box(sword, 0.075, 0.23, 0.075, 0x151b3e, 0, -0.08, 0);
+  sphere(sword, 0.065, 0x9deaff, 0, -0.22, 0, [1, 1, 1], { emissive: 0x48bfff, emissiveIntensity: 1.7 });
+  sword.position.set(0, -0.44, 0.06);
+  sword.rotation.z = -0.28;
+  arms[1].add(sword);
+
+  const slash = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.07, 8, 40, Math.PI * 1.3), new THREE.MeshBasicMaterial({ color: 0x8edfff, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending }));
+  slash.position.set(0.45, 1.02, 0.34);
+  slash.rotation.z = -0.45;
+  slash.visible = false;
+  root.add(slash);
+  root.userData = { legs, arms, sword, slash, body, head };
+  return root;
+}
+
+function createHeroModel(isSecondPlayer = false) {
+  if (!isSecondPlayer) return createMainHeroModel();
   const root = new THREE.Group();
   const skin = material(0xffd0bb, { roughness: 0.78 });
-  const hair = material(0xf45eb5, { roughness: 0.4, metalness: 0.05, emissive: 0x5c0d45, emissiveIntensity: 0.16 });
+  const hair = material(isSecondPlayer ? 0x55ddf0 : 0xf45eb5, { roughness: 0.4, metalness: 0.05, emissive: isSecondPlayer ? 0x075666 : 0x5c0d45, emissiveIntensity: 0.16 });
   const orange = material(0xff913d, { roughness: 0.48 });
   const dark = material(0x17213c, { roughness: 0.7 });
   const gold = material(0xffd477, { metalness: 0.55, roughness: 0.32 });
@@ -91,7 +250,7 @@ function createHeroModel() {
   sphere(root, 0.035, gold, 0.27, 1.94, 0.01, [1.15, 0.5, 1.15], { emissive: 0xf49343, emissiveIntensity: 0.4 });
 
   const sword = new THREE.Group();
-  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.075, 0.82, 8), cyan);
+  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.1, 1.18, 10), cyan);
   blade.position.y = 0.48;
   blade.rotation.z = -0.35;
   sword.add(blade);
@@ -104,7 +263,7 @@ function createHeroModel() {
   root.add(sword);
 
   const slash = new THREE.Mesh(
-    new THREE.TorusGeometry(0.6, 0.035, 6, 32, Math.PI * 1.15),
+    new THREE.TorusGeometry(0.82, 0.065, 8, 40, Math.PI * 1.3),
     new THREE.MeshBasicMaterial({ color: 0x9bffff, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending })
   );
   slash.position.set(0.45, 1.02, 0.33);
@@ -170,7 +329,7 @@ function createVillain() {
   light.position.set(0, 2.05, 0.4);
   root.add(light);
   root.userData = { halo, aura, core, light, body };
-  root.position.set(10.5, 0, -16.4);
+  root.position.set(14, 0, -16.2);
   root.visible = false;
   return root;
 }
@@ -273,7 +432,7 @@ function createTree(parent, x, z, index) {
 
 function createBuilding(parent, x, z, width, height, depth, index) {
   const building = new THREE.Group();
-  const colors = [0x222449, 0x252642, 0x1a2b49, 0x292340, 0x1c3150];
+  const colors = [0x44305d, 0x31506e, 0x6d394e, 0x326354, 0x745137, 0x4d3a77, 0x276075, 0x765046];
   const bodyColor = colors[index % colors.length];
   box(building, width, height, depth, bodyColor, 0, height / 2, 0, { roughness: 0.72, metalness: 0.24 });
   box(building, width + 0.14, 0.14, depth + 0.14, index % 3 ? 0x4fe2ef : 0xff6fba, 0, height - 0.06, 0, { emissive: index % 3 ? 0x147a9b : 0x76204b, emissiveIntensity: 1.4, metalness: 0.46 });
@@ -294,6 +453,166 @@ function createBuilding(parent, x, z, width, height, depth, index) {
   building.position.set(x, 0, z);
   parent.add(building);
   return building;
+}
+
+function createVillageHouse(parent, x, z, index = 0) {
+  const house = new THREE.Group();
+  const walls = [0xff9eaa, 0xffd66e, 0x7fe0bc, 0xd58cff, 0x78caff, 0xffad67, 0xf279c7, 0xc3e86b][index % 8];
+  const roof = [0x49334f, 0x354d60, 0x713e55, 0x354b38][index % 4];
+  const timber = material(0x49333a, { roughness: 0.76 });
+  box(house, 3.9, 2.3, 3.2, walls, 0, 1.18, 0, { roughness: 0.9 });
+  box(house, 4.15, 0.16, 3.42, 0x62524d, 0, 0.12, 0, { roughness: 0.9 });
+  box(house, 0.78, 1.65, 0.09, 0x543c3d, 0, 0.94, 1.65);
+  box(house, 0.63, 1.48, 0.035, 0x9a6a55, 0, 0.86, 1.71, { roughness: 0.8 });
+  box(house, 0.84, 0.12, 0.16, 0x332b3b, 0, 1.78, 1.69, { roughness: 0.8 });
+  box(house, 0.045, 0.045, 0.035, 0xffd477, 0.2, 0.91, 1.745, { metalness: 0.45 });
+  for (const side of [-1, 1]) {
+    box(house, 0.64, 0.76, 0.08, 0xeee4cb, side * 1.05, 1.42, 1.65);
+    box(house, 0.48, 0.56, 0.035, index % 2 ? 0x8dd9e8 : 0xa6e0e8, side * 1.05, 1.43, 1.705, { roughness: 0.42, metalness: 0.12, emissive: 0x194c58, emissiveIntensity: 0.18 });
+    for (const bar of [-0.24, 0, 0.24]) box(house, 0.035, 0.78, 0.055, timber.color, side * 1.05 + bar, 1.42, 1.71);
+    box(house, 0.72, 0.07, 0.08, timber.color, side * 1.05, 1.42, 1.74);
+    box(house, 0.83, 0.09, 0.24, 0x714553, side * 1.05, 0.98, 1.82, { roughness: 0.82 });
+    sphere(house, 0.1, index % 2 ? 0xf67c78 : 0xffc36f, side * 1.05, 1.01, 1.91, [1.5, 0.62, 0.75]);
+  }
+  for (const side of [-1, 1]) {
+    const roofPanel = box(house, 4.8, 0.2, 1.78, roof, 0, 2.62, side * 0.63, { roughness: 0.52, metalness: 0.2 });
+    roofPanel.rotation.x = side * 0.4;
+  }
+  box(house, 5.05, 0.17, 0.26, roof, 0, 3.03, 0, { roughness: 0.48, metalness: 0.2 });
+  box(house, 4.35, 0.14, 0.24, timber.color, 0, 2.5, 1.55);
+  box(house, 0.09, 2.24, 0.11, timber.color, -1.91, 1.2, 1.65);
+  box(house, 0.09, 2.24, 0.11, timber.color, 1.91, 1.2, 1.65);
+  box(house, 0.42, 0.62, 0.42, 0x54434d, 1.48, 2.9, -0.58, { roughness: 0.9 });
+  box(house, 0.5, 0.11, 0.5, 0x725663, 1.48, 3.26, -0.58, { roughness: 0.8 });
+  const hangingLamp = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), material(0xffce79, { emissive: 0xff9c45, emissiveIntensity: 1.6 }));
+  hangingLamp.position.set(0, 1.82, 1.86);
+  house.add(hangingLamp);
+  house.position.set(x, 0, z);
+  house.rotation.y = z > 0 ? Math.PI : 0;
+  house.traverse((object) => { if (object.isMesh) object.castShadow = true; });
+  parent.add(house);
+  return house;
+}
+
+function createVillageWell(parent, x, z) {
+  const well = new THREE.Group();
+  const stone = material(0x8a8984, { roughness: 0.94 });
+  const water = new THREE.Mesh(new THREE.CircleGeometry(0.54, 16), material(0x34778a, { emissive: 0x12455e, emissiveIntensity: 0.7, roughness: 0.22, metalness: 0.5 }));
+  water.rotation.x = -Math.PI / 2;
+  water.position.y = 0.48;
+  well.add(water);
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.82, 0.72, 12, 1, true), stone);
+  wall.position.y = 0.38;
+  well.add(wall);
+  for (let postX of [-0.72, 0.72]) {
+    box(well, 0.12, 1.65, 0.12, 0x624a3b, postX, 1.15, 0, { roughness: 0.85 });
+  }
+  const beam = box(well, 1.65, 0.12, 0.14, 0x624a3b, 0, 1.93, 0, { roughness: 0.85 });
+  beam.rotation.z = 0.02;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.12, 0.62, 4), material(0x9b584d, { roughness: 0.78 }));
+  roof.position.y = 2.2;
+  roof.rotation.y = Math.PI / 4;
+  well.add(roof);
+  box(well, 0.06, 0.9, 0.06, 0x392e38, 0, 1.42, 0.08);
+  well.position.set(x, 0, z);
+  parent.add(well);
+  return well;
+}
+
+function createVillageMarketStall(parent, x, z, color = 0xe36f70) {
+  const stall = new THREE.Group();
+  const wood = material(0x644b3e, { roughness: 0.86 });
+  box(stall, 2.8, 0.13, 1.25, 0xb48765, 0, 0.9, 0, { roughness: 0.86 });
+  for (const px of [-1.24, 1.24]) for (const pz of [-0.48, 0.48]) box(stall, 0.09, 1.35, 0.09, wood.color, px, 0.67, pz, { roughness: 0.86 });
+  box(stall, 3.05, 0.12, 1.55, color, 0, 1.42, 0, { roughness: 0.78 });
+  for (const stripe of [-1, 0, 1]) box(stall, 0.045, 0.13, 1.5, 0xffdfaa, stripe * 0.72, 1.42, 0.015, { roughness: 0.78 });
+  for (let crate = -1; crate <= 1; crate += 1) {
+    const produce = new THREE.Mesh(new THREE.SphereGeometry(0.19, 8, 6), material([0xe45c64, 0xf1c650, 0x78b766][crate + 1], { roughness: 0.55 }));
+    produce.position.set(crate * 0.66, 1.12, 0.05);
+    produce.scale.set(1.3, 0.8, 0.9);
+    stall.add(produce);
+  }
+  stall.position.set(x, 0, z);
+  parent.add(stall);
+  return stall;
+}
+
+function createVillageGarden(parent, x, z, index = 0) {
+  const garden = new THREE.Group();
+  const soil = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 6.2), material(0x594938, { roughness: 1 }));
+  soil.rotation.x = -Math.PI / 2;
+  soil.position.y = -0.025;
+  garden.add(soil);
+  for (const row of [-1.65, -0.55, 0.55, 1.65]) {
+    for (let crop = -3; crop <= 3; crop += 1) {
+      const plant = new THREE.Mesh(new THREE.ConeGeometry(0.19, 0.48 + (crop + index) % 2 * 0.1, 5), material((crop + index) % 3 === 0 ? 0xa6c55d : 0x579558, { roughness: 0.94 }));
+      plant.position.set(crop * 0.49, 0.24, row);
+      garden.add(plant);
+    }
+  }
+  const fence = material(0x9c7954, { roughness: 0.9 });
+  for (const side of [-1, 1]) {
+    for (let post = -3; post <= 3; post += 1) box(garden, 0.07, 0.58, 0.07, fence.color, side * 4, 0.28, post * 0.9, { roughness: 0.9 });
+    box(garden, 0.08, 0.12, 6.2, fence.color, side * 4, 0.42, 0, { roughness: 0.9 });
+  }
+  for (const side of [-1, 1]) {
+    for (let post = -4; post <= 4; post += 1) box(garden, 0.07, 0.58, 0.07, fence.color, post * 0.9, 0.28, side * 3, { roughness: 0.9 });
+    box(garden, 8.2, 0.12, 0.08, fence.color, 0, 0.42, side * 3, { roughness: 0.9 });
+  }
+  garden.position.set(x, 0, z);
+  parent.add(garden);
+  return garden;
+}
+
+function createHill(parent, x, z, scale = 1) {
+  const hill = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 12),
+    material(0x334d58, { roughness: 1, metalness: 0 })
+  );
+  hill.scale.set(18 * scale, 8 * scale, 15 * scale);
+  hill.position.set(x, -3.5 * scale, z);
+  hill.receiveShadow = true;
+  parent.add(hill);
+  return hill;
+}
+
+function createToriiGate(parent, x, z, scale = 1) {
+  const gate = new THREE.Group();
+
+  const red = material(0xd92735, {
+    roughness: 0.45,
+    metalness: 0.12
+  });
+
+  const black = material(0x25213a, {
+    roughness: 0.5
+  });
+
+  // Two vertical pillars
+  box(gate, 0.22, 2.5, 0.22, 0xd92735,
+    -1.15, 1.25, 0);
+
+  box(gate, 0.22, 2.5, 0.22, 0xd92735,
+    1.15, 1.25, 0);
+
+  // Main horizontal beam
+  box(gate, 3.3, 0.24, 0.38, 0xd92735,
+    0, 2.55, 0);
+
+  // Upper roof beam
+  box(gate, 3.7, 0.2, 0.48, 0x25213a,
+    0, 2.78, 0);
+
+  // Decorative center plaque
+  box(gate, 0.48, 0.38, 0.08, 0xffd477,
+    0, 2.35, 0.24);
+
+  gate.position.set(x, 0, z);
+  gate.scale.setScalar(scale);
+
+  parent.add(gate);
+
+  return gate;
 }
 
 function createBridge(parent, x, z) {
@@ -360,7 +679,7 @@ function createShoppingStreet(parent, registerCollision) {
   const wood = material(0x4a3046, { roughness: 0.76 });
   const paper = material(0xff557f, { emissive: 0xc31c56, emissiveIntensity: 1.15, roughness: 0.7 });
   for (let index = 0; index < 3; index += 1) {
-    const x = 17 + index * 2.75;
+    const x = 0.8 + index * 2.55;
     const shop = new THREE.Group();
     box(shop, 2.35, 1.8, 1.55, index % 2 ? 0x9d645c : 0x927258, 0, 0.9, 0, { roughness: 0.83 });
     box(shop, 2.6, 0.15, 1.85, wood.color, 0, 1.86, 0);
@@ -369,12 +688,32 @@ function createShoppingStreet(parent, registerCollision) {
     for (const side of [-1, 1]) box(shop, 0.08, 0.78, 0.1, 0xf1c47e, side * 0.94, 0.77, 0.87);
     box(shop, 1.18, 0.35, 0.08, index % 2 ? 0x42dbea : 0xff527e, 0, 1.55, 0.89, { emissive: index % 2 ? 0x15909c : 0x94173f, emissiveIntensity: 1.3 });
     box(shop, 0.78, 0.46, 0.08, paper.color, 0, 2.28, 0.83, { emissive: 0x921d4a, emissiveIntensity: 1.15 });
+    for (let slat = 0; slat < 5; slat += 1) {
+      box(shop, 0.055, 1.2, 0.065, wood.color, -0.78 + slat * 0.39, 0.92, 0.93);
+    }
+    for (let panel = -1; panel <= 1; panel += 1) {
+      box(shop, 0.38, 0.32, 0.06, panel === 0 ? 0xff8b75 : paper.color, panel * 0.41, 1.32, 0.95, { emissive: panel === 0 ? 0x8e3032 : 0x921d4a, emissiveIntensity: 0.8 });
+    }
     shop.position.set(x, 0, -7.8);
     parent.add(shop);
     registerCollision(x, -7.8, 1.3, 1.12, shop);
     lanterns.push(createLantern(parent, x - 0.9, -5.55, index % 2 ? 0xffa65b : 0xff668e));
   }
   return lanterns;
+}
+
+function createOldTownPlaza(parent, x, z) {
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 7.2), material(0x574b53, { roughness: 0.88, metalness: 0.08 }));
+  base.rotation.x = -Math.PI / 2;
+  base.position.set(x, -0.075, z);
+  base.receiveShadow = true;
+  parent.add(base);
+  const paverColors = [0x897879, 0x766974, 0x95817a];
+  for (let row = 0; row < 4; row += 1) {
+    for (let column = 0; column < 6; column += 1) {
+      box(parent, 1.48, 0.045, 1.58, paverColors[(row + column) % paverColors.length], x - 4.5 + column * 1.5, -0.025, z - 2.85 + row * 1.62, { roughness: 0.92, metalness: 0.04 });
+    }
+  }
 }
 
 function createShrine(parent, x, z, registerCollision) {
@@ -490,7 +829,7 @@ function createCastle(parent, x, z) {
   beacon.position.set(0, 3.2, 2.7);
   castle.add(beacon);
   castle.position.set(x, 0, z);
-  castle.scale.setScalar(0.88);
+  castle.scale.setScalar(1.24);
   parent.add(castle);
   return castle;
 }
@@ -581,7 +920,7 @@ function addBackdrop(scene) {
     ridge.rotation.y = Math.PI / 5;
     scene.add(ridge);
   }
-  return { moon, moonRings, stars: addStars(scene) };
+  return { sky, moon, moonRings, stars: addStars(scene) };
 }
 
 function makeRenderer(canvas, options = {}) {
@@ -610,7 +949,7 @@ export function createScene(canvas, previewCanvas) {
   const nightMoonColor = new THREE.Color(0xf35483);
   const cycleSkyColor = new THREE.Color();
   const cycleFogColor = new THREE.Color();
-  const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 140);
+  const camera = new THREE.PerspectiveCamera(49, 1, 0.1, 140);
   const cameraCurrentQuaternion = new THREE.Quaternion();
   const cameraTargetQuaternion = new THREE.Quaternion();
   const cameraLookTarget = new THREE.Vector3();
@@ -653,10 +992,12 @@ export function createScene(canvas, previewCanvas) {
     return line;
   });
   const backdrop = addBackdrop(scene);
+  const nightBackdropColor = backdrop.sky.material.color.clone();
+  const sunsetBackdropColor = new THREE.Color(0xf08a99);
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH + 8, 54), material(0x171d38, { roughness: 0.44, metalness: 0.38 }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH + 8, 190), material(0x171d38, { roughness: 0.44, metalness: 0.38 }));
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(WORLD_LENGTH / 2, -0.12, -8.5);
+  floor.position.set(WORLD_LENGTH / 2, -0.12, -18);
   floor.receiveShadow = true;
   scene.add(floor);
   const street = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH + 2, 10), material(0x11152f, { roughness: 0.31, metalness: 0.56 }));
@@ -682,28 +1023,231 @@ export function createScene(canvas, previewCanvas) {
     curb.receiveShadow = true;
     scene.add(curb);
   }
+  const sideStreet = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH, 6), street.material);
+  sideStreet.rotation.x = -Math.PI / 2;
+  sideStreet.position.set(WORLD_LENGTH / 2, -0.075, 36);
+  sideStreet.receiveShadow = true;
+  scene.add(sideStreet);
+  const backStreet = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_LENGTH, 6), street.material);
+  backStreet.rotation.x = -Math.PI / 2;
+  backStreet.position.set(WORLD_LENGTH / 2, -0.075, -36);
+  backStreet.receiveShadow = true;
+  scene.add(backStreet);
+  for (const x of [20, 40, 60, 80]) {
+    const crossStreet = new THREE.Mesh(new THREE.PlaneGeometry(7, 165), street.material);
+    crossStreet.rotation.x = -Math.PI / 2;
+    crossStreet.position.set(x, -0.07, -18);
+    crossStreet.receiveShadow = true;
+    scene.add(crossStreet);
+  }
+  for (const [x, z, variant] of [[27, 20, 0], [47, -28, 1], [72, 22, 2], [84, -31, 3]]) {
+    const house = createVillageHouse(scene, x, z, variant);
+    registerLandmarkCollision(solidRects, cameraBlockers, x, z, 2.15, 1.9, house);
+  }
+  createPark(scene, 63, -56);
+  createToriiGate(scene, 55, -44, 1.15);
+  const startingHillNorth = createHill(scene, 29, -86, 1.15);
+  registerLandmarkCollision(solidRects, cameraBlockers, 29, -86, 15, 12, startingHillNorth);
+  const startingHillSouth = createHill(scene, 74, 50, 0.9);
+  registerLandmarkCollision(solidRects, cameraBlockers, 74, 50, 12, 9, startingHillSouth);
+
+  const extensionFloorMaterial = material(0x171d38, { roughness: 0.44, metalness: 0.38 });
+  const extensionStreetMaterial = material(0x11152f, { roughness: 0.31, metalness: 0.56 });
+  const extensionDashMaterial = material(0xffb2ca, { emissive: 0xa83260, emissiveIntensity: 0.45 });
+  const sharedRoadMaterials = new Set([laneMaterial, sidewalkMat, extensionFloorMaterial, extensionStreetMaterial, extensionDashMaterial]);
+  const extensionTiles = new Map();
+  const updateExtensionRoad = (playerX) => {
+    const tileLength = 90;
+    const currentTile = Math.max(0, Math.floor((playerX - WORLD_LENGTH) / tileLength));
+    for (let tileIndex = Math.max(0, currentTile - 1); tileIndex <= currentTile + 2; tileIndex += 1) {
+      if (extensionTiles.has(tileIndex)) continue;
+      const tile = new THREE.Group();
+      const centerX = WORLD_LENGTH + tileIndex * tileLength + tileLength / 2;
+      const tileFloor = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 190), extensionFloorMaterial);
+      tileFloor.rotation.x = -Math.PI / 2;
+      tileFloor.position.set(0, -0.12, -18);
+      tileFloor.receiveShadow = true;
+      tile.add(tileFloor);
+      const tileStreet = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 10), extensionStreetMaterial);
+      tileStreet.rotation.x = -Math.PI / 2;
+      tileStreet.position.set(0, -0.08, 0);
+      tileStreet.receiveShadow = true;
+      tile.add(tileStreet);
+      for (const z of [-4.25, 4.25]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(tileLength, 0.035, 0.045), laneMaterial);
+        line.position.set(0, -0.035, z);
+        tile.add(line);
+      }
+      for (let x = -tileLength / 2 + 1.2; x < tileLength / 2; x += 2.3) {
+        const dash = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.025, 0.055), extensionDashMaterial);
+        dash.position.set(x, -0.026, 0);
+        tile.add(dash);
+      }
+      for (const z of [-6, 6]) {
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(tileLength, 0.25, 1.7), sidewalkMat);
+        curb.position.set(0, 0.03, z);
+        curb.receiveShadow = true;
+        tile.add(curb);
+      }
+      const sideRoad = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 6), extensionStreetMaterial);
+      sideRoad.rotation.x = -Math.PI / 2;
+      sideRoad.position.set(0, -0.075, 36);
+      tile.add(sideRoad);
+      const backRoad = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 6), extensionStreetMaterial);
+      backRoad.rotation.x = -Math.PI / 2;
+      backRoad.position.set(0, -0.075, -36);
+      tile.add(backRoad);
+      const crossRoad = new THREE.Mesh(new THREE.PlaneGeometry(7, 190), extensionStreetMaterial);
+      crossRoad.rotation.x = -Math.PI / 2;
+      crossRoad.position.set(0, -0.07, -18);
+      tile.add(crossRoad);
+      const isVillage = tileIndex % 2 === 1;
+      if (isVillage) {
+        for (const z of [-18, 18]) {
+          const lane = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 4.4), extensionStreetMaterial);
+          lane.rotation.x = -Math.PI / 2;
+          lane.position.set(0, -0.073, z);
+          tile.add(lane);
+        }
+        for (const x of [-30, 30]) {
+          const lane = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 190), extensionStreetMaterial);
+          lane.rotation.x = -Math.PI / 2;
+          lane.position.set(x, -0.068, -18);
+          tile.add(lane);
+        }
+        for (const z of [-20.7, -15.3, 15.3, 20.7]) {
+          const footpath = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 0.65), material(0x766b70, { roughness: 0.94 }));
+          footpath.rotation.x = -Math.PI / 2;
+          footpath.position.set(0, -0.045, z);
+          tile.add(footpath);
+        }
+      }
+      tile.userData.solidRects = [];
+      tile.userData.cameraBlockers = [];
+      const addVillageObstacle = (x, z, halfWidth, halfDepth, object) => {
+        const rect = { x: centerX + x, z, halfWidth, halfDepth };
+        solidRects.push(rect);
+        tile.userData.solidRects.push(rect);
+        cameraBlockers.push(object);
+        tile.userData.cameraBlockers.push(object);
+      };
+      const addHouse = (x, z, index, isVillage) => {
+        const houseWidth = isVillage ? 4.7 : 5.7;
+        const houseDepth = isVillage ? 4.3 : 4.8;
+        const house = isVillage
+          ? createVillageHouse(tile, x, z, index)
+          : createBuilding(tile, x, z, houseWidth, 7 + (index % 5) * 1.5, houseDepth, index);
+        const rect = { x: centerX + x, z, halfWidth: houseWidth / 2, halfDepth: houseDepth / 2 };
+        solidRects.push(rect);
+        tile.userData.solidRects.push(rect);
+        const blocker = house.children[0];
+        cameraBlockers.push(blocker);
+        tile.userData.cameraBlockers.push(blocker);
+      };
+      if (isVillage) {
+        for (const z of [-27, -9, 9, 27]) {
+          for (const x of [-39, -21, 21, 39]) addHouse(x, z, tileIndex * 32 + x * 3 + z + 500, true);
+        }
+      } else {
+        for (const x of [-23, -12, 12, 23]) {
+          addHouse(x, -17, tileIndex * 4 + x + 25, false);
+          addHouse(x, 17, tileIndex * 4 + x + 27, false);
+        }
+      }
+      if (isVillage) {
+        const villageEdge = tileIndex % 5 === 4 ? -53 : 53;
+        createToriiGate(tile, -21, -43, 1.05);
+        createLantern(tile, -26, -16, 0xffc477);
+        createLantern(tile, 26, 16, 0xffc477);
+        for (const [x, z, color] of [[-6, 43, 0xffb667], [6, 43, 0x78d9e9]]) {
+          const stall = createVillageMarketStall(tile, x, z, color);
+          addVillageObstacle(x, z, 1.55, 0.9, stall);
+        }
+        const well = createVillageWell(tile, 0, villageEdge - Math.sign(villageEdge) * 4);
+        addVillageObstacle(0, villageEdge - Math.sign(villageEdge) * 4, 1, 1, well);
+        const gardenX = villageEdge < 0 ? -23 : 23;
+        const garden = createVillageGarden(tile, gardenX, villageEdge, tileIndex);
+        addVillageObstacle(gardenX, villageEdge, 4.2, 3.2, garden);
+      }
+      if (tileIndex % 4 === 2) createPark(tile, -12, -53);
+      if (tileIndex % 5 === 4) {
+        const riverGrass = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 16), material(0x245947, { roughness: 0.95 }));
+        riverGrass.rotation.x = -Math.PI / 2;
+        riverGrass.position.set(0, -0.045, 55);
+        tile.add(riverGrass);
+        const stream = new THREE.Mesh(new THREE.PlaneGeometry(tileLength, 3.2), new THREE.MeshStandardMaterial({ color: 0x2584a2, emissive: 0x0b4b70, emissiveIntensity: 0.9, roughness: 0.2, metalness: 0.62, transparent: true, opacity: 0.9 }));
+        stream.rotation.x = -Math.PI / 2;
+        stream.position.set(0, -0.018, 55);
+        tile.add(stream);
+        tile.userData.flowStrips = [];
+        for (let ripple = 0; ripple < 8; ripple += 1) {
+          const strip = box(tile, 2.1, 0.018, 0.07, ripple % 2 ? 0x70e8e9 : 0x9bf8eb, -tileLength / 2 + ripple * 11, 0.005, 54.35 + (ripple % 3) * 0.58, { emissive: 0x39bdd2, emissiveIntensity: 0.8, transparent: true, opacity: 0.65 });
+          tile.userData.flowStrips.push({ mesh: strip, offset: ripple * 11, lane: (ripple % 3) * 0.58 });
+        }
+        createBridge(tile, 0, 55);
+        const addForestTree = (x, z, seed) => {
+          const tree = createTree(tile, x, z, seed);
+          const rect = { x: centerX + x, z, halfWidth: 0.78, halfDepth: 0.78 };
+          solidRects.push(rect);
+          tile.userData.solidRects.push(rect);
+          cameraBlockers.push(tree.children[0]);
+          tile.userData.cameraBlockers.push(tree.children[0]);
+        };
+        for (const x of [-37, -27, -17, 17, 27, 37]) {
+          addForestTree(x, 46 + (x % 2) * 1.8, tileIndex * 20 + x + 100);
+          addForestTree(x, 64 + (x % 2) * 1.5, tileIndex * 20 + x + 130);
+        }
+        for (let grass = 0; grass < 12; grass += 1) {
+          const x = -40 + grass * 7.2;
+          sphere(tile, 0.65, grass % 2 ? 0x4e915a : 0x70a95c, x, 0.16, 43 + (grass % 3) * 3, [1.5, 0.35, 0.8], { roughness: 0.96 });
+        }
+        const nearHill = createHill(tile, -27, 76, 0.78);
+        const farHill = createHill(tile, 28, -80, 0.88);
+        for (const [x, z, scale, hill] of [[-27, 76, 0.78, nearHill], [28, -80, 0.88, farHill]]) {
+          const rect = { x: centerX + x, z, halfWidth: 13 * scale, halfDepth: 10 * scale };
+          solidRects.push(rect);
+          tile.userData.solidRects.push(rect);
+          cameraBlockers.push(hill);
+          tile.userData.cameraBlockers.push(hill);
+        }
+      }
+      tile.position.x = centerX;
+      scene.add(tile);
+      extensionTiles.set(tileIndex, tile);
+    }
+    for (const [tileIndex, tile] of extensionTiles) {
+      if (tileIndex >= currentTile - 2) continue;
+      for (const rect of tile.userData.solidRects || []) {
+        const rectIndex = solidRects.indexOf(rect);
+        if (rectIndex >= 0) solidRects.splice(rectIndex, 1);
+      }
+      for (const blocker of tile.userData.cameraBlockers || []) {
+        const blockerIndex = cameraBlockers.indexOf(blocker);
+        if (blockerIndex >= 0) cameraBlockers.splice(blockerIndex, 1);
+      }
+      scene.remove(tile);
+      tile.traverse((object) => {
+        if (!object.isMesh) return;
+        object.geometry.dispose();
+        if (Array.isArray(object.material)) object.material.forEach((entry) => { if (!sharedRoadMaterials.has(entry)) entry.dispose(); });
+        else if (!sharedRoadMaterials.has(object.material)) object.material.dispose();
+      });
+      extensionTiles.delete(tileIndex);
+    }
+  };
+
+  const animateExtensionWater = (time) => {
+    for (const [tileIndex, tile] of extensionTiles) {
+      for (const ripple of tile.userData.flowStrips || []) {
+        ripple.mesh.position.x = ((time * 0.004 + ripple.offset + 45) % 90) - 45;
+        ripple.mesh.position.z = 54.35 + ripple.lane + Math.sin(time / 430 + tileIndex + ripple.offset) * 0.12;
+      }
+    }
+  };
 
   const cityLightMaterials = new Set();
-  const addCityBuilding = (x, z, width, height, depth, index) => {
-    const building = createBuilding(scene, x, z, width, height, depth, index);
-    building.traverse((object) => {
-      if (!object.isMesh || !object.material?.emissiveIntensity) return;
-      cityLightMaterials.add(object.material);
-      object.material.userData.cityBaseIntensity ??= object.material.emissiveIntensity;
-    });
-    solidRects.push({ x, z, halfWidth: width / 2 + 0.16, halfDepth: depth / 2 + 0.16 });
-    cameraBlockers.push(building.children[0]);
-  };
-  const hasStreetEntrance = (x) => (x >= 3.3 && x <= 6.8) || (x >= 9 && x <= 14.5) || (x >= 25 && x <= 30);
-  for (let index = 0, x = -4; x < WORLD_LENGTH + 5; index += 1, x += 3.85 + (index % 3) * 0.3) {
-    const width = 1.8 + (index * 7 % 9) * 0.13;
-    const height = 4.2 + (index * 11 % 22) * 0.32;
-    if (!hasStreetEntrance(x)) addCityBuilding(x, -10.5, width, height, 2.2, index);
-    if (index % 2 === 0 && !hasStreetEntrance(x + 1.25)) addCityBuilding(x + 1.25, -18.5, width * 1.12, height * 0.76, 2.5, index + 2);
-    if (index % 4 === 0 && !hasStreetEntrance(x - 1)) addCityBuilding(x - 1, -27, width * 0.82, height * 1.08, 2.4, index + 3);
-  }
   for (let index = 0; index < 17; index += 1) {
-    if (index === 6) continue;
+    if (index === 1 || index === 6) continue;
     const x = index * 6.1 + 1.5;
     const z = index % 2 ? -6.1 : 6.3;
     const tree = createTree(scene, x, z, index);
@@ -717,28 +1261,34 @@ export function createScene(canvas, previewCanvas) {
   }
   createLantern(scene, 8.65, -5.7, 0xffc477);
   createLantern(scene, 13.35, -5.7, 0xffc477);
-  const castle = createCastle(scene, 7.5, -13.8);
-  registerLandmarkCollision(solidRects, cameraBlockers, 7.5, -13.8, 2.1, 1.75, castle);
+  const castle = createCastle(scene, 10.5, -13.8);
+  registerLandmarkCollision(solidRects, cameraBlockers, 10.5, -13.8, 2.9, 2.4, castle);
   for (let step = 0; step < 4; step += 1) {
-    box(scene, 3.5 - step * 0.28, 0.16, 0.42, 0x68707e, 7.5, 0.08 + step * 0.13, -10.95 - step * 0.44, { roughness: 0.87 });
+    box(scene, 3.5 - step * 0.28, 0.16, 0.42, 0x68707e, 10.5, 0.08 + step * 0.13, -10.95 - step * 0.44, { roughness: 0.87 });
   }
-  createLantern(scene, 5.1, -10.8, 0xffd178);
-  createLantern(scene, 9.9, -10.8, 0xffd178);
-  const tower = createTower(scene, 19.5, -10.1);
-  registerLandmarkCollision(solidRects, cameraBlockers, 19.5, -10.1, 0.6, 0.6, tower);
+  createLantern(scene, 7.7, -10.8, 0xffd178);
+  createLantern(scene, 13.3, -10.8, 0xffd178);
+  const tower = createTower(scene, 8.3, -23.5);
+  registerLandmarkCollision(solidRects, cameraBlockers, 8.3, -23.5, 0.6, 0.6, tower);
   const shoppingLanterns = createShoppingStreet(scene, (x, z, halfWidth, halfDepth, object) => registerLandmarkCollision(solidRects, cameraBlockers, x, z, halfWidth, halfDepth, object));
+  createOldTownPlaza(scene, 3.35, -4.25);
   const shrine = createShrine(scene, 91, -2.2, (x, z, halfWidth, halfDepth, object) => registerLandmarkCollision(solidRects, cameraBlockers, x, z, halfWidth, halfDepth, object));
   cameraBlockers.push(...shrine.lanterns);
   const billboard = createHeroBillboard(scene, 15, 3.7);
   registerLandmarkCollision(solidRects, cameraBlockers, 15, 3.7, 1.5, 0.55, billboard);
   createBridge(scene, 38, 9.4);
   createPark(scene, 38, 14.1);
+  createBridge(scene, 15, -19.2);
+  solidRects.push(
+    { x: 10.55, z: -19.2, halfWidth: 2.05, halfDepth: 1.1 },
+    { x: 19.45, z: -19.2, halfWidth: 2.05, halfDepth: 1.1 }
+  );
   for (const [x, z] of [[33, 14.1], [43, 14.1], [38, 17.7]]) solidRects.push({ x, z, halfWidth: 0.46, halfDepth: 0.46 });
 
   const locations = [
-    { id: "castle", name: "Ancient Castle", x: 5, z: -11.7, radius: 3.2, description: "A lantern-lit stronghold watching over old Nagoya.", objective: "Explore the castle entrance." },
+    { id: "castle", name: "Ancient Castle", x: 8, z: -11.7, radius: 3.2, description: "A lantern-lit stronghold watching over old Nagoya.", objective: "Explore the castle entrance." },
     { id: "temple", name: "Ancient Temple", x: 11, z: -4, radius: 2.7, description: "A peaceful wooden hall shelters a quiet, mysterious energy.", objective: "Investigate the temple grounds." },
-    { id: "shopping", name: "Traditional Shopping Street", x: 20.5, z: -4.3, radius: 2.8, description: "Paper lanterns glow over the lively heart of the old city.", objective: "Find someone who knows about the strange signal." },
+    { id: "shopping", name: "Traditional Shopping Street", x: 3.35, z: -4.3, radius: 2.8, description: "Paper lanterns glow over the lively heart of the old city.", objective: "Find someone who knows about the strange signal." },
     { id: "modern", name: "Future District", x: 27, z: -14.1, radius: 3.1, description: "Blue-lit towers and neon signs mark modern Nagoya.", objective: "Investigate the signal near the towers." },
     { id: "park", name: "Cherry Blossom Park", x: 38, z: 12.2, radius: 3.1, description: "A quiet garden, pond and blossom trees sit beyond the riverside bridge.", objective: "Search the park for clues." },
     { id: "shrine", name: "Old Shrine", x: 91, z: 1.05, radius: 3.2, description: "Beyond the torii, an old shrine hums with an unfamiliar energy.", objective: "Search the shrine grounds." }
@@ -766,6 +1316,11 @@ export function createScene(canvas, previewCanvas) {
     }
   });
   scene.add(hero);
+  const heroTwo = createHeroModel(true);
+  heroTwo.position.set(115 * UNIT, 0, 2);
+  heroTwo.visible = false;
+  heroTwo.traverse((object) => { if (object.isMesh) { object.castShadow = true; object.receiveShadow = true; } });
+  scene.add(heroTwo);
   const villain = createVillain();
   scene.add(villain);
 
@@ -846,7 +1401,8 @@ export function createScene(canvas, previewCanvas) {
     const outer = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), new THREE.MeshStandardMaterial({ color: 0xff76d2, emissive: 0xff39b5, emissiveIntensity: 2.2, metalness: 0.45, roughness: 0.18 }));
     const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), new THREE.MeshBasicMaterial({ color: 0xffe9ff }));
     group.add(outer, core);
-    group.position.set(shard.x * UNIT, 0.8 + index % 2 * 0.55, shard.z ?? (index % 3 === 0 ? -0.35 : 0.25));
+    const shardHeight = Number.isFinite(shard.y) ? Math.max(0.65, (470 - shard.y) * UNIT) : 0.8 + index % 2 * 0.55;
+    group.position.set(shard.x * UNIT, shardHeight, shard.z ?? (index % 3 === 0 ? -0.35 : 0.25));
     scene.add(group);
     shardMap.set(shard, group);
     return group;
@@ -941,19 +1497,38 @@ export function createScene(canvas, previewCanvas) {
     const startX = x;
     const startZ = z;
     const blocked = (candidateX, candidateZ) => {
-      if (candidateX < radius || candidateX > WORLD_LENGTH - radius || candidateZ < -33 || candidateZ > 18) return true;
-      if (candidateZ > 8.25 && candidateZ < 10.55 && Math.abs(candidateX - 38) > 2.1) return true;
+      if (candidateX < radius || candidateZ < -112 || candidateZ > 74) return true;
       return solidRects.some((rect) => Math.abs(candidateX - rect.x) < rect.halfWidth + radius && Math.abs(candidateZ - rect.z) < rect.halfDepth + radius);
     };
     if (!blocked(x + deltaX, z)) x += deltaX;
+    else if (Math.abs(deltaX) > 0.001) {
+      const obstacles = solidRects.filter((rect) => Math.abs(x + deltaX - rect.x) < rect.halfWidth + radius && Math.abs(z - rect.z) < rect.halfDepth + radius);
+      for (const rect of obstacles) {
+        const preferred = z >= rect.z ? 1 : -1;
+        const nudge = Math.min(0.18, Math.max(0.045, Math.abs(deltaX) * 0.7));
+        const side = [preferred, -preferred].find((direction) => !blocked(x, z + direction * nudge));
+        if (side) { z += side * nudge; break; }
+      }
+      if (!blocked(x + deltaX, z)) x += deltaX;
+    }
     if (!blocked(x, z + deltaZ)) z += deltaZ;
+    else if (Math.abs(deltaZ) > 0.001) {
+      const obstacles = solidRects.filter((rect) => Math.abs(x - rect.x) < rect.halfWidth + radius && Math.abs(z + deltaZ - rect.z) < rect.halfDepth + radius);
+      for (const rect of obstacles) {
+        const preferred = x >= rect.x ? 1 : -1;
+        const nudge = Math.min(0.18, Math.max(0.045, Math.abs(deltaZ) * 0.7));
+        const side = [preferred, -preferred].find((direction) => !blocked(x + direction * nudge, z));
+        if (side) { x += side * nudge; break; }
+      }
+      if (!blocked(x, z + deltaZ)) z += deltaZ;
+    }
     player.x = x / UNIT;
     player.z = z;
     return { x: x - startX, z: z - startZ };
   }
 
   function getNearbyLocation(player) {
-    const playerX = player.x * UNIT;
+    const playerX = (player.x + player.width / 2) * UNIT;
     const playerZ = player.z || 0;
     let closest = null;
     for (const location of locations) {
@@ -964,7 +1539,7 @@ export function createScene(canvas, previewCanvas) {
   }
 
   function getNearbyEnergyPoint(player, points) {
-    const playerX = player.x * UNIT;
+    const playerX = (player.x + player.width / 2) * UNIT;
     const playerZ = player.z || 0;
     let closest = null;
     for (const point of points || []) {
@@ -1004,6 +1579,8 @@ export function createScene(canvas, previewCanvas) {
     const time = state.time || 0;
     syncObjects(state.shards, state.enemies);
     syncChallenge(state.challenge);
+    updateExtensionRoad(state.player.x * UNIT);
+    animateExtensionWater(time);
     const heroElevation = Math.max(0, (470 - (state.player.y + state.player.height)) * UNIT);
     const heroX = (state.player.x + state.player.width / 2) * UNIT;
     const heroZ = state.player.z || 0;
@@ -1025,10 +1602,32 @@ export function createScene(canvas, previewCanvas) {
     hero.userData.legs[1].rotation.z = -stride;
     hero.userData.arms[0].rotation.z = -stride * 0.6;
     hero.userData.arms[1].rotation.z = stride * 0.6;
+    const attackProgress = state.player.attackTime > 0 ? 1 - state.player.attackTime / 260 : 0;
+    const attackSwing = state.player.attackTime > 0 ? Math.sin(attackProgress * Math.PI) : 0;
+    hero.userData.arms[1].rotation.x = -1.55 * attackSwing + Math.sin(time / 52) * smoothedStride * 0.12;
+    hero.userData.arms[1].rotation.z = stride * 0.6 - attackSwing * 0.42;
+    hero.userData.sword.rotation.z = -0.28 + attackSwing * 0.42;
     hero.userData.slash.visible = state.player.attackTime > 0;
     hero.userData.slash.scale.setScalar(0.75 + state.player.attackTime / 650);
     hero.userData.slash.material.opacity = Math.min(1, state.player.attackTime / 90);
     hero.visible = !(state.player.invulnerable > 0 && Math.floor(time / 90) % 2 === 0);
+
+    const coOpPlayer = state.gameMode && state.gameMode !== "single" ? state.playerTwo : null;
+    heroTwo.visible = Boolean(coOpPlayer);
+    if (coOpPlayer) {
+      const secondElevation = Math.max(0, (470 - (coOpPlayer.y + coOpPlayer.height)) * UNIT);
+      heroTwo.position.set((coOpPlayer.x + coOpPlayer.width / 2) * UNIT, secondElevation + Math.sin(time / 175) * (coOpPlayer.onGround ? 0.025 : 0), coOpPlayer.z || 0);
+      heroTwo.rotation.y = coOpPlayer.heading ?? Math.PI;
+      const secondStride = Math.sin(time / (coOpPlayer.running ? 48 : 78)) * Math.min(1, Math.hypot(coOpPlayer.velocityX || 0, coOpPlayer.velocityZ || 0) / 2.5) * 0.7;
+      heroTwo.userData.legs[0].rotation.z = secondStride;
+      heroTwo.userData.legs[1].rotation.z = -secondStride;
+      heroTwo.userData.arms[0].rotation.z = -secondStride * 0.6;
+      heroTwo.userData.arms[1].rotation.z = secondStride * 0.6;
+      heroTwo.userData.slash.visible = coOpPlayer.attackTime > 0;
+      heroTwo.userData.slash.scale.setScalar(0.75 + coOpPlayer.attackTime / 650);
+      heroTwo.userData.slash.material.opacity = Math.min(1, coOpPlayer.attackTime / 90);
+      heroTwo.visible = !(coOpPlayer.invulnerable > 0 && Math.floor(time / 90) % 2 === 0);
+    }
 
     const challenge = state.challenge;
     const villainActive = challenge && ["INTRO", "CHALLENGE", "DEFEATED", "ENDING"].includes(challenge.villainState);
@@ -1038,7 +1637,7 @@ export function createScene(canvas, previewCanvas) {
       const villainPosition = challenge.villainPosition || { x: 10.5, z: -16.4 };
       villain.position.set(villainPosition.x, Math.sin(time / 480) * 0.08, villainPosition.z);
       villain.rotation.y = Math.sin(time / 1500) * 0.08;
-      villain.scale.setScalar(0.18 + introProgress * 0.82);
+      villain.scale.setScalar(challenge.villainState === "DEFEATED" ? 0.58 : 0.18 + introProgress * 0.82);
       villain.userData.halo.rotation.y = time / 1250;
       villain.userData.aura.material.opacity = 0.1 + Math.sin(time / 280) * 0.025;
       villain.userData.core.material.emissiveIntensity = 2.8 + Math.sin(time / 210) * 0.7;
@@ -1101,7 +1700,7 @@ export function createScene(canvas, previewCanvas) {
       visual.userData.frameMaterial.opacity = 0.48 + Math.sin(time / 210 + barrier.id) * 0.22;
     }
     const restorationProgress = Math.max(0, Math.min(1, challenge?.restorationProgress || 0));
-    const daylight = 0.5 - 0.5 * Math.cos(time / 42000);
+    const daylight = 0.5 + 0.45 * Math.sin(time / 42000);
     const nightGlow = 1 - daylight;
     lanterns.forEach((lantern, index) => {
       lantern.userData.glass.emissiveIntensity = 1 + Math.sin(time / 310 + index * 1.7) * 0.2 + nightGlow * 0.32 + restorationProgress * 0.9;
@@ -1136,6 +1735,7 @@ export function createScene(canvas, previewCanvas) {
     cycleFogColor.copy(originalFogColor).lerp(daylightFogColor, daylight * 0.52);
     scene.background.copy(cycleSkyColor).lerp(restoredSkyColor, restorationProgress);
     scene.fog.color.copy(cycleFogColor).lerp(restoredFogColor, restorationProgress);
+    backdrop.sky.material.color.copy(nightBackdropColor).lerp(sunsetBackdropColor, daylight);
     backdrop.moon.material.color.copy(nightMoonColor).lerp(dayMoonColor, daylight * 0.8);
     backdrop.moonRings.material.opacity = 0.8 * (1 - daylight * 0.72);
     backdrop.stars.material.opacity = 0.78 * (1 - daylight * 0.88);
@@ -1178,11 +1778,16 @@ export function createScene(canvas, previewCanvas) {
       }
       smoothCameraLookAt(cameraLookTarget, elapsed, 3.4);
     } else {
-      const focus = new THREE.Vector3(heroX, heroElevation + 1.12, heroZ);
+      const secondX = coOpPlayer ? (coOpPlayer.x + coOpPlayer.width / 2) * UNIT : heroX;
+      const secondZ = coOpPlayer ? coOpPlayer.z || 0 : heroZ;
+      const focusX = (heroX + secondX) / 2;
+      const focusZ = (heroZ + secondZ) / 2;
+      const separation = coOpPlayer ? Math.hypot(heroX - secondX, heroZ - secondZ) : 0;
+      const focus = new THREE.Vector3(focusX, heroElevation + 1.12, focusZ);
       const desiredCamera = new THREE.Vector3(
-        heroX + Math.sin(orbitYaw) * 6.2,
+        focusX + Math.sin(orbitYaw) * (6.2 + Math.min(7, separation * 0.45)),
         Math.max(1.85, focus.y + 3.05),
-        heroZ + Math.cos(orbitYaw) * 6.2
+        focusZ + Math.cos(orbitYaw) * (6.2 + Math.min(7, separation * 0.45))
       );
       const cameraDirection = desiredCamera.clone().sub(focus);
       const cameraDistance = cameraDirection.length();
@@ -1198,7 +1803,7 @@ export function createScene(canvas, previewCanvas) {
       } else {
         camera.position.lerp(desiredCamera, 1 - Math.exp(-elapsed * 7));
       }
-      cameraLookTarget.set(focus.x - Math.sin(orbitYaw) * 1.25, focus.y + 0.2, focus.z - Math.cos(orbitYaw) * 1.25);
+      cameraLookTarget.set(focus.x + 0.7 - Math.sin(orbitYaw) * 1.25, focus.y + 0.2, focus.z - Math.cos(orbitYaw) * 1.25);
       smoothCameraLookAt(cameraLookTarget, elapsed, 8);
     }
     renderer.render(scene, camera);

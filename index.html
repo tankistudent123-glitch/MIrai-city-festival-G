@@ -37,7 +37,8 @@
           <canvas id="gameCanvas" aria-label="Third-person 3D adventure in a neon Japanese city. Use W A S D or arrow keys to move, Shift to run, Space to jump, and drag to orbit the camera. Touch controls are available on mobile." role="img"></canvas>
           <div class="game-topline">
             <div class="chapter-tag"><span class="chapter-icon">桜</span><span><b>MIRAI QUEST</b><small id="locationName">SAKURA STREET</small></span></div>
-            <div class="game-stats"><span><b id="shardCount">00</b><small>SHARDS</small></span><span class="stat-divider"></span><span><b id="enemyCount">04</b><small>SHADOWS</small></span></div>
+            <div class="game-stats"><span><b id="shardCount">00</b><small>SHARDS</small></span><span class="stat-divider"></span><span><b id="enemyCount">04</b><small>SHADOWS</small></span><span class="stat-divider"></span><span><b id="scoreValue">000000</b><small>SCORE</small></span></div>
+            <span class="team-names" id="teamNames" hidden></span>
           </div>
           <div class="health-display" aria-label="Player health"><span id="healthLabel">HP</span><div class="health-track"><i id="healthFill"></i></div><b id="healthValue">100</b></div>
           <div class="mission-chip"><span class="mission-star">✦</span><span><small>ACTIVE QUEST</small><b id="missionText">Find the gate · 0 / 5 shards</b></span></div>
@@ -45,6 +46,8 @@
           <div class="start-screen" id="startScreen">
             <div class="start-mark">✦</div><p class="eyebrow">A NEON JAPANESE ADVENTURE</p><h2>YOUR CITY.<br><em>YOUR FUTURE.</em></h2>
             <p>Walk beneath the sakura. Find your way<br>through a city where old and new meet.</p>
+            <div class="game-mode-select" role="group" aria-label="Choose game mode"><button type="button" class="mode-choice selected" data-mode="single" aria-pressed="true">SINGLE</button><button type="button" class="mode-choice" data-mode="online" aria-pressed="false">2 PLAYERS ONLINE</button></div>
+            <div class="online-room-panel" id="onlineRoomPanel" hidden><label>YOUR NAME<input id="playerNameInput" maxlength="16" autocomplete="nickname" placeholder="Enter your name"></label><div class="online-room-actions"><button id="createRoomButton" type="button">CREATE ROOM</button><span>OR</span><input id="roomCodeInput" maxlength="6" inputmode="numeric" placeholder="ROOM CODE" aria-label="Room code"><button id="joinRoomButton" type="button">JOIN</button></div><button id="copyRoomCodeButton" type="button" hidden>COPY ROOM CODE</button><p id="onlineRoomStatus" role="status" aria-live="polite">Create a room and send its code to your friend.</p></div>
             <button class="primary-button" id="startButton" type="button"><span>ENTER THE CITY</span><b>↗</b></button>
             <small class="start-hint">W/A/S/D MOVE <span>·</span> SHIFT RUN <span>·</span> DRAG TO ORBIT</small>
           </div>
@@ -77,6 +80,7 @@
           <button class="touch-interact" id="touchInteract" type="button" hidden>⌖ <span id="touchInteractText">Tap to Explore</span></button>
           <div class="control-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVE</span><span><kbd>SHIFT</kbd> RUN</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>DRAG</kbd> ORBIT</span></div>
           <div class="action-controls"><button class="touch-button jump-button" data-control="jump" type="button" aria-label="Jump">↑</button><button class="touch-button attack-button" data-control="attack" type="button" aria-label="Attack">✦</button></div>
+          <button class="game-pause-control" id="gamePauseControl" type="button" aria-label="Pause game" title="Pause game" hidden>PAUSE</button>
         </div>
       </div>
 
@@ -86,6 +90,7 @@
           <div class="hero-portrait" aria-label="Three-dimensional pink-haired heroine"><canvas id="heroPreview" class="hero-preview" aria-label="3D heroine preview" role="img"></canvas><span class="portrait-label">FIELD AGENT · 17</span></div>
           <div class="hero-name"><div><h2>SAKURA RUNNER</h2><p>NAGOYA CITY GUARDIAN</p></div><span class="level-badge">LV <b id="levelValue">01</b></span></div>
           <div class="hero-xp"><div><span>EXPERIENCE</span><b id="xpValue">0 / 100</b></div><i><span id="xpFill"></span></i></div>
+          <p class="progression-guide"><b>LEVEL UP</b> · Every 100 XP · Shard 12 XP / 100 pts · Shadow 30 XP / 300 pts · Boss hit 75 pts</p>
           <p class="hero-quote">“The future is ours to protect.”</p>
         </section>
 
@@ -101,6 +106,7 @@
           <div class="quest-progress-track"><span id="questProgressFill"></span></div>
           <div class="quest-location-row"><span>⌖ LOCATION</span><b id="questLocation">SAKURA STREET</b></div>
           <p class="quest-story" id="questStory" aria-live="polite">Explore the city to trace the signal.</p>
+          <p class="win-guide"><b>TO WIN</b> · Complete 7 quests and restore all energy points.</p>
           <div class="restoration-meter" aria-label="City restoration progress">
             <div class="restoration-heading"><span>CITY RESTORATION</span><b id="restorationProgressValue">0%</b></div>
             <div class="restoration-track" role="progressbar" aria-label="City restoration" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="restorationProgressFill"></span></div>
@@ -110,6 +116,8 @@
           <div class="challenge-panel" id="challengePanel" hidden>
             <b class="challenge-heading">FINAL CHALLENGE</b>
             <p id="challengeObjective">Restore the 3 city energy points.</p>
+            <div class="challenge-stat"><span>SIGNAL KEEPER</span><b id="bossHealthValue">100%</b></div>
+            <div class="challenge-track boss-health-track"><span id="bossHealthFill"></span></div>
             <div class="challenge-stat"><span>ENERGY POINTS</span><b id="energyPointsProgress">0 / 3</b></div>
             <div class="challenge-track"><span id="energyPointsFill"></span></div>
             <div class="challenge-stat energy-stat"><span>PLAYER ENERGY</span><b id="playerEnergyValue">100%</b></div>
